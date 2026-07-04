@@ -1,0 +1,111 @@
+---
+import { categories } from "../data/products.js";
+
+interface Props {
+  active?: string;
+}
+
+const { active = "Pizzas" } = Astro.props;
+---
+
+<div class="tabs-wrap">
+  <div class="tabs" role="tablist" data-h-scroll>
+    {
+      categories.map((cat) => (
+        <button
+          type="button"
+          role="tab"
+          aria-selected={cat === active}
+          class:list={["tab", { active: cat === active }]}
+        >
+          {cat}
+        </button>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .tabs-wrap {
+    width: 100%;
+    max-width: var(--container-grid);
+    margin: clamp(32px, 5vw, 44px) auto 0;
+    padding: 0 16px;
+  }
+
+  .tabs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--color-surface-soft);
+    border-radius: var(--radius-pill);
+    padding: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab {
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: clamp(14px, 1.2vw, 16px);
+    font-weight: 500;
+    padding: 10px 18px;
+    border-radius: var(--radius-pill);
+    transition: background-color 0.2s ease, color 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+
+  @media (min-width: 768px) {
+    .tab {
+      padding: 10px 22px;
+    }
+  }
+
+  .tab:hover {
+    color: var(--color-text);
+  }
+
+  .tab.active {
+    background: var(--color-brand);
+    color: #fff;
+  }
+</style>
+
+<script>
+  // Convierte el wheel vertical en scroll horizontal cuando el contenedor
+  // tiene más contenido del que cabe. Asi funciona con la rueda del ratón
+  // en laptops, no solo con touchpad o pantallas táctiles.
+  document.querySelectorAll<HTMLElement>("[data-h-scroll]").forEach((el) => {
+    el.addEventListener(
+      "wheel",
+      (e) => {
+        if (e.deltaY === 0) return;
+        // Si el usuario ya está haciendo scroll horizontal (touchpad), respeta eso
+        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+
+        const max = el.scrollWidth - el.clientWidth;
+        if (max <= 0) return;
+
+        const atStart = el.scrollLeft <= 0 && e.deltaY < 0;
+        const atEnd = el.scrollLeft >= max - 1 && e.deltaY > 0;
+        // Deja que la página haga scroll vertical si estamos en el extremo
+        if (atStart || atEnd) return;
+
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+      },
+      { passive: false },
+    );
+  });
+</script>

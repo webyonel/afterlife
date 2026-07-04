@@ -1,0 +1,71 @@
+---
+// Hero con título grande y highlight tipo highlighter naranja en "After Life:"
+---
+
+<section class="hero" id="inicio">
+  <p class="eyebrow">Es un gusto tenerte de vuelta</p>
+  <h1 class="title">
+    <span class="highlight">After Life:</span>
+    <span class="rest">Pizzas, Hamburguesas y Lasañas Caseras</span>
+  </h1>
+  <p class="lead">
+    El sabor que buscas en un solo lugar. Masa crocante, carne jugosa y el toque casero que
+    marca la diferencia. Pedí online o vení a disfrutarlo con nosotros.
+  </p>
+</section>
+
+<style>
+  .hero {
+    max-width: 920px;
+    margin: clamp(32px, 5vw, 56px) auto 0;
+    padding: 0 24px;
+    text-align: center;
+  }
+
+  .eyebrow {
+    margin: 0 0 14px;
+    font-size: clamp(15px, 1.4vw, 18px);
+    color: var(--color-text-muted);
+    font-weight: 400;
+  }
+
+  .title {
+    margin: 0;
+    font-size: clamp(36px, 6.4vw, 84px);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  .highlight {
+    position: relative;
+    display: inline-block;
+    color: var(--color-text);
+    z-index: 0;
+  }
+
+  .highlight::before {
+    content: "";
+    position: absolute;
+    left: -0.06em;
+    right: -0.06em;
+    bottom: 0.08em;
+    height: 0.28em;
+    background: var(--color-brand);
+    border-radius: 2px;
+    z-index: -1;
+  }
+
+  .rest {
+    display: block;
+  }
+
+  .lead {
+    margin: clamp(18px, 2.5vw, 22px) auto 0;
+    max-width: 720px;
+    color: var(--color-text-muted);
+    font-size: clamp(14px, 1.2vw, 18px);
+    line-height: 1.55;
+  }
+</style>

@@ -1,0 +1,281 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+---
+
+<Layout title="Panel de administración — After Life">
+  <Navbar />
+
+  <main class="login">
+    <section class="card" aria-labelledby="login-title">
+      <header class="head">
+        <span class="eyebrow">Panel de administración</span>
+        <h1 id="login-title" class="title">Bienvenido de vuelta</h1>
+        <p class="lead">
+          Inicia sesión para gestionar productos y todo tu menú.
+        </p>
+      </header>
+
+      <form class="form" novalidate>
+        <label class="field">
+          <span class="label">Correo electrónico</span>
+          <input
+            type="email"
+            name="email"
+            placeholder="tu@correo.com"
+            required
+            autocomplete="email"
+            data-login-email
+          />
+        </label>
+
+        <label class="field">
+          <span class="label">Contraseña</span>
+          <input
+            type="password"
+            name="password"
+            placeholder="••••••••"
+            required
+            minlength="6"
+            autocomplete="current-password"
+            data-login-password
+          />
+        </label>
+
+        <button type="submit" class="submit" data-login-submit>
+          Iniciar sesión
+        </button>
+      </form>
+
+      <footer class="foot">
+        <a href="/" class="back">← Volver al sitio</a>
+      </footer>
+    </section>
+  </main>
+</Layout>
+
+<style>
+  .login {
+    min-height: calc(100vh - 120px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px 80px;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 440px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    padding: clamp(28px, 4vw, 40px) clamp(24px, 4vw, 32px);
+    box-shadow: var(--shadow-nav);
+  }
+
+  .head {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .eyebrow {
+    display: inline-block;
+    color: var(--color-brand);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 0 0 10px;
+  }
+
+  .title {
+    font-size: clamp(24px, 3vw, 30px);
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 8px;
+    letter-spacing: -0.02em;
+  }
+
+  .lead {
+    color: var(--color-text-muted);
+    font-size: 14px;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text);
+  }
+
+  .field input {
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-soft);
+    border-radius: var(--radius-pill);
+    padding: 13px 18px;
+    font-size: 15px;
+    color: var(--color-text);
+    font-family: inherit;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    outline: none;
+    width: 100%;
+  }
+
+  .field input::placeholder {
+    color: #aaa;
+  }
+
+  .field input:hover {
+    border-color: #c8c8c8;
+  }
+
+  .field input:focus {
+    border-color: var(--color-brand);
+    background: var(--color-surface);
+    box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.15);
+  }
+
+  .extras {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .check {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .check input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-brand);
+    cursor: pointer;
+  }
+
+  .link {
+    color: var(--color-brand);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+  }
+
+  .link:hover {
+    color: var(--color-brand-dark);
+    text-decoration: underline;
+  }
+
+  .submit {
+    margin-top: 8px;
+    background: var(--color-brand);
+    color: #fff;
+    font-weight: 600;
+    font-size: 15px;
+    border: none;
+    border-radius: var(--radius-pill);
+    padding: 14px 24px;
+    transition: background 0.2s ease, transform 0.1s ease, opacity 0.2s ease;
+    cursor: pointer;
+  }
+
+  .submit:hover {
+    background: var(--color-brand-dark);
+  }
+
+  .submit:active {
+    transform: scale(0.98);
+  }
+
+  .submit:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .error {
+    margin: 0;
+    color: #c0392b;
+    background: #fdecea;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .foot {
+    margin-top: 24px;
+    text-align: center;
+  }
+
+  .back {
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    transition: color 0.2s ease;
+  }
+
+  .back:hover {
+    color: var(--color-text);
+  }
+</style>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>(".form");
+  const submit = document.querySelector<HTMLButtonElement>("[data-login-submit]");
+  const errorEl = document.querySelector<HTMLElement>("[data-login-error]");
+
+  if (form && submit && errorEl) {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      errorEl.hidden = true;
+
+      const emailInput = form.querySelector<HTMLInputElement>("[data-login-email]");
+      const passwordInput = form.querySelector<HTMLInputElement>(
+        "[data-login-password]",
+      );
+
+      const email = emailInput?.value.trim() ?? "";
+      const password = passwordInput?.value ?? "";
+
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      const passwordOk = password.length >= 6;
+
+      if (!emailOk || !passwordOk) {
+        errorEl.hidden = false;
+        return;
+      }
+
+      // Placeholder: aquí se haría la llamada al backend.
+      // De momento mostramos feedback y redirigimos a la home para no romper UX.
+      submit.disabled = true;
+      submit.textContent = "Verificando...";
+
+      setTimeout(() => {
+        submit.disabled = false;
+        submit.textContent = "Iniciar sesión";
+        // TODO: redirigir a /admin cuando exista el dashboard real.
+        window.location.href = "/";
+      }, 900);
+    });
+  }
+</script>

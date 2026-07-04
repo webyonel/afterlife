@@ -1,7 +1,55 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Hero from "../components/Hero.astro";
+import CategoryTabs from "../components/CategoryTabs.astro";
+import ProductCard from "../components/ProductCard.astro";
+import { products } from "../data/products.js";
 ---
 
-<Layout>
-	<h1>HOLA MUNDO</h1>
+<Layout title="After Life — Pizzas, Hamburguesas y Lasañas Caseras">
+  <Navbar />
+  <Hero />
+
+  <div id="menu">
+    <CategoryTabs active="Pizzas" />
+  </div>
+
+  <section class="grid" id="contacto">
+    {products.map((p) => <ProductCard {...p} />)}
+  </section>
+
+  <footer class="footer">
+    <p>© {new Date().getFullYear()} After Life — Hecho con masa, queso y cariño.</p>
+  </footer>
 </Layout>
+
+<style>
+  #menu {
+    display: contents;
+  }
+
+  .grid {
+    max-width: var(--container-grid);
+    margin: 32px auto var(--space-section);
+    padding: 0 16px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  @media (min-width: 720px) {
+    .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      padding: 0 24px;
+    }
+  }
+
+  .footer {
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 13px;
+    padding: 24px 24px 40px;
+  }
+</style>

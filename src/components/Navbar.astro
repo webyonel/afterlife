@@ -1,0 +1,251 @@
+---
+// Navbar estilo pill flotante. En escritorio muestra logo + links (Inicio, Menú, Contacto)
+// + botón de menú. En móvil solo logo + botón de menú; el botón abre un panel con los links.
+const links = [
+  { href: "#inicio", label: "Inicio" },
+  { href: "#menu", label: "Menú" },
+  { href: "#contacto", label: "Contacto" },
+];
+---
+
+<nav class="nav" aria-label="Principal">
+  <div class="pill">
+    <a href="/" class="logo" aria-label="After Life inicio">
+      <img src="/logo.png" alt="After Life" />
+    </a>
+
+    <ul class="links" role="list">
+      {
+        links.map(({ href, label }) => (
+          <li>
+            <a href={href}>{label}</a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <button
+      class="menu-btn"
+      type="button"
+      aria-label="Abrir menú"
+      aria-expanded="false"
+      aria-controls="mobile-menu"
+      data-menu-toggle
+    >
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+</nav>
+
+<div class="mobile-menu" id="mobile-menu" hidden data-menu-panel>
+  <ul role="list">
+    {
+      links.map(({ href, label }) => (
+        <li>
+          <a href={href}>{label}</a>
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<style>
+  .nav {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 28px 24px 0;
+    position: relative;
+    z-index: 50;
+  }
+
+  .pill {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+    max-width: 680px;
+    background: var(--color-surface);
+    border-radius: var(--radius-pill);
+    padding: 10px 12px 10px 14px;
+    box-shadow: var(--shadow-nav);
+  }
+
+  .logo {
+    display: inline-flex;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #111;
+    overflow: hidden;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: none;
+    gap: 8px;
+    align-items: center;
+    flex: 1;
+    justify-content: flex-end;
+  }
+
+  .links a {
+    display: inline-block;
+    padding: 10px 18px;
+    border-radius: var(--radius-pill);
+    color: var(--color-text-muted);
+    font-weight: 500;
+    font-size: 15px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .links a:hover {
+    color: var(--color-text);
+    background: var(--color-surface-soft);
+  }
+
+  .menu-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    flex-shrink: 0;
+    color: var(--color-text);
+    transition: background-color 0.2s ease;
+  }
+
+  .menu-btn:hover {
+    background: var(--color-surface-soft);
+  }
+
+  .menu-btn span {
+    display: block;
+    width: 22px;
+    height: 2.5px;
+    background: currentColor;
+    border-radius: 2px;
+    transition: transform 0.25s ease, opacity 0.2s ease;
+  }
+
+  /* Mobile menu panel */
+  .mobile-menu {
+    position: fixed;
+    top: 92px;
+    left: 24px;
+    right: 24px;
+    background: var(--color-surface);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-nav);
+    padding: 16px;
+    z-index: 40;
+    animation: drop 0.18s ease-out;
+  }
+
+  .mobile-menu[hidden] {
+    display: none;
+  }
+
+  .mobile-menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .mobile-menu a {
+    display: block;
+    padding: 14px 18px;
+    border-radius: 14px;
+    color: var(--color-text);
+    font-weight: 500;
+    font-size: 16px;
+    transition: background-color 0.2s ease;
+  }
+
+  .mobile-menu a:hover {
+    background: var(--color-surface-soft);
+  }
+
+  @keyframes drop {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Desktop: show links inside pill, hide hamburger */
+  @media (min-width: 768px) {
+    .pill {
+      gap: 24px;
+      padding: 10px 12px 10px 16px;
+    }
+
+    .links {
+      display: flex;
+    }
+
+    .menu-btn {
+      display: none;
+    }
+
+    .logo {
+      width: 52px;
+      height: 52px;
+    }
+  }
+</style>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>("[data-menu-toggle]");
+  const panel = document.querySelector<HTMLElement>("[data-menu-panel]");
+
+  if (toggle && panel) {
+    toggle.addEventListener("click", () => {
+      const isOpen = !panel.hidden;
+      panel.hidden = isOpen;
+      toggle.setAttribute("aria-expanded", String(!isOpen));
+    });
+
+    panel.querySelectorAll("a").forEach((a) =>
+      a.addEventListener("click", () => {
+        panel.hidden = true;
+        toggle.setAttribute("aria-expanded", "false");
+      }),
+    );
+
+    document.addEventListener("click", (e) => {
+      if (panel.hidden) return;
+      const target = e.target as Node;
+      if (!panel.contains(target) && !toggle.contains(target)) {
+        panel.hidden = true;
+        toggle.setAttribute("aria-expanded", "false");
+      }
+    });
+  }
+</script>
