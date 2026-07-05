@@ -241,17 +241,32 @@ import Navbar from "../../components/Navbar.astro";
 <script>
   import { supabase } from "../../lib/supabase";
 
-  // ---------- Referencias al DOM ----------
-  const form = document.querySelector<HTMLFormElement>(".form");
-  if (!form) throw new Error("No se encontró el formulario");
-
-  const emailInput = form.querySelector<HTMLInputElement>("[data-login-email]");
-  const passwordInput = form.querySelector<HTMLInputElement>("[data-login-password]");
-  const submitButton = form.querySelector<HTMLButtonElement>("[data-login-submit]");
-
-  if (!emailInput || !passwordInput || !submitButton) {
-    throw new Error("Faltan campos obligatorios del formulario");
+  // Estrecha un resultado posiblemente-null de un querySelector y lanza un error
+  // descriptivo si no se encontró. TypeScript NO propaga el narrowing a través de
+  // closures (listeners, handlers), así que este helper asegura tipos no-null
+  // estables para todo el resto del script.
+  function requireEl<T>(value: T | null, message: string): T {
+    if (value === null) throw new Error(message);
+    return value;
   }
+
+  // ---------- Referencias al DOM ----------
+  const form = requireEl(
+    document.querySelector<HTMLFormElement>(".form"),
+    "No se encontró el formulario",
+  );
+  const emailInput = requireEl(
+    form.querySelector<HTMLInputElement>("[data-login-email]"),
+    "Falta el campo de correo electrónico",
+  );
+  const passwordInput = requireEl(
+    form.querySelector<HTMLInputElement>("[data-login-password]"),
+    "Falta el campo de contraseña",
+  );
+  const submitButton = requireEl(
+    form.querySelector<HTMLButtonElement>("[data-login-submit]"),
+    "Falta el botón de inicio de sesión",
+  );
 
   // ---------- Constantes ----------
   const MIN_PASSWORD_LENGTH = 6;
