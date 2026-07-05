@@ -1,0 +1,268 @@
+---
+// Carrito flotante. Empieza oculto (`hidden`). El script de la home lo hace
+// visible al añadir el primer producto y lo actualiza en cada cambio de
+// cantidad. En desktop se ancla al fondo a la izquierda; en móvil se estira
+// a pantalla completa (con scroll interno si la lista crece).
+---
+
+<aside class="cart" data-cart hidden aria-label="Tu pedido">
+  <header class="cart-head">
+    <div class="cart-head-text">
+      <span class="cart-eyebrow">Tu pedido</span>
+      <span class="cart-count" data-cart-count>0 productos</span>
+    </div>
+    <button
+      type="button"
+      class="cart-clear"
+      data-cart-clear
+      aria-label="Vaciar pedido"
+    >
+      <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 6h18"/>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        <path d="M10 11v6"/>
+        <path d="M14 11v6"/>
+      </svg>
+      <span>Vaciar</span>
+    </button>
+  </header>
+
+  <ul class="cart-list" data-cart-list></ul>
+
+  <footer class="cart-foot">
+    <span class="cart-total-label">Total</span>
+    <span class="cart-total-amount" data-cart-total-amount>0 cup</span>
+  </footer>
+</aside>
+
+<style>
+  /* ---------- Contenedor flotante ---------- */
+  .cart {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    width: min(320px, calc(100vw - 32px));
+    max-height: min(70vh, 480px);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 50;
+    /* Anima al aparecer/desaparecer con un sutil slide-up desde la esquina */
+    transform-origin: bottom right;
+    animation: cartIn 0.22s ease-out;
+  }
+
+  .cart[hidden] {
+    display: none;
+  }
+
+  @keyframes cartIn {
+    from { opacity: 0; transform: translateY(8px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* ---------- Cabecera ---------- */
+  .cart-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
+  }
+
+  .cart-head-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .cart-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-brand);
+  }
+
+  .cart-count {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-top: 2px;
+  }
+
+  .cart-clear {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    flex-shrink: 0;
+    align-self: flex-start;
+    /* Igual que los botones +/-: mata el delay del doble-tap en táctil */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .cart-clear:hover {
+    background: #fdecea;
+    border-color: #f3c4be;
+    color: #c0392b;
+  }
+
+  .cart-clear svg {
+    flex-shrink: 0;
+  }
+
+  /* ---------- Lista de items ---------- */
+  .cart-list {
+    list-style: none;
+    margin: 0;
+    padding: 6px 8px;
+    overflow-y: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    /* Scrollbar discreta */
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+  }
+
+  .cart-list::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .cart-list::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 999px;
+  }
+
+  .cart-list :global(.cart-item) {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    border-radius: 12px;
+    transition: background-color 0.15s ease;
+  }
+
+  .cart-list :global(.cart-item:hover) {
+    background: var(--color-surface-soft);
+  }
+
+  .cart-list :global(.cart-thumb) {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #d8d8d8;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cart-list :global(.cart-thumb img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cart-list :global(.cart-thumb-fallback) {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    user-select: none;
+  }
+
+  .cart-list :global(.cart-item-body) {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .cart-list :global(.cart-name) {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cart-list :global(.cart-line) {
+    font-size: 12px;
+    color: var(--color-text-muted);
+  }
+
+  .cart-list :global(.cart-line-total) {
+    flex: 0 0 auto;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-brand);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* ---------- Footer / Total ---------- */
+  .cart-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface-soft);
+  }
+
+  .cart-total-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .cart-total-amount {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- Móvil: ocupa el ancho ---------- */
+  @media (max-width: 640px) {
+    .cart {
+      right: 0;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      max-width: 100%;
+      max-height: 60vh;
+      border-radius: var(--radius-card) var(--radius-card) 0 0;
+      border-bottom: none;
+      animation: cartInMobile 0.22s ease-out;
+    }
+
+    @keyframes cartInMobile {
+      from { opacity: 0; transform: translateY(100%); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  }
+</style>
