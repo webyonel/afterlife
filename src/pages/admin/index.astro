@@ -8,7 +8,11 @@ import Navbar from "../../components/Navbar.astro";
 // disponibilidad sí persiste en Supabase vía UPDATE sobre la fila del producto.
 ---
 
-<Layout title="Panel — After Life">
+<Layout
+  title="Panel — After Life"
+  description="Panel interno de gestión de After Life."
+  noindex={true}
+>
   <Navbar />
 
   <main class="admin">

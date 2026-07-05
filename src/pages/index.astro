@@ -4,9 +4,100 @@ import Navbar from "../components/Navbar.astro";
 import Hero from "../components/Hero.astro";
 import CategoryTabs from "../components/CategoryTabs.astro";
 import Cart from "../components/Cart.astro";
+
+// Datos estructurados (Schema.org Restaurant). Ayudan a Google a entender
+// que el sitio es un negocio local real y muestran rich snippets en
+// resultados de búsqueda (estrellas, horarios, dirección). El JSON-LD se
+// inyecta dentro del <head> del Layout para que los crawlers lo lean sin
+// ejecutar JS.
+const restaurantSchema = {
+  "@context": "https://schema.org",
+  "@type": "Restaurant",
+  "@id": "https://afterlife.vercel.app/#restaurant",
+  name: "After Life",
+  alternateName: "Cafetería After Life",
+  description:
+    "Cafetería en Ciego de Ávila especializada en pizzas, hamburguesas y lasañas caseras. Pedí online o vení a disfrutarlo con nosotros.",
+  url: "https://afterlife.vercel.app/",
+  telephone: "+53-XXX-XXXXXX",
+  image: "https://afterlife.vercel.app/og-image.png",
+  logo: "https://afterlife.vercel.app/logo.png",
+  priceRange: "$$",
+  servesCuisine: [
+    "Pizza",
+    "Hamburguesas",
+    "Lasaña",
+    "Comida casera",
+    "Cafetería",
+  ],
+  acceptsReservations: "False",
+  hasMenu: "https://afterlife.vercel.app/#menu",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Ciego de Ávila",
+    addressLocality: "Ciego de Ávila",
+    addressRegion: "Ciego de Ávila",
+    postalCode: "65200",
+    addressCountry: "CU",
+  },
+  geo: {
+    "@type": "GeoCoordinates",
+    latitude: 21.84,
+    longitude: -78.761944,
+  },
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+      ],
+      opens: "11:00",
+      closes: "23:00",
+    },
+  ],
+  sameAs: [
+    // Añadir aquí cuando existan los perfiles reales en redes sociales.
+    // "https://www.facebook.com/afterlifeciego",
+    // "https://www.instagram.com/afterlifeciego",
+  ],
+};
+
+// WebSite schema: habilita el box de búsqueda interna de Google cuando
+// el sitio tenga suficiente autoridad.
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": "https://afterlife.vercel.app/#website",
+  url: "https://afterlife.vercel.app/",
+  name: "After Life",
+  inLanguage: "es-ES",
+};
 ---
 
-<Layout title="After Life — Pizzas, Hamburguesas y Lasañas Caseras">
+<Layout
+  title="After Life — Cafetería en Ciego de Ávila | Pizzas, Hamburguesas y Lasañas Caseras"
+  description="Cafetería After Life en Ciego de Ávila: pizzas caseras, hamburguesas y lasañas. Pedí online o vení a disfrutar el sabor que buscás, hecho con masa, queso y cariño."
+>
+  {/* JSON-LD inyectado en el <head> de forma retroactiva: Astro coloca
+     este <script type="application/ld+json"> en el head porque vive
+     dentro del layout padre. */}
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(restaurantSchema)}
+    slot="head"
+  />
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(websiteSchema)}
+    slot="head"
+  />
+
   <Navbar />
   <Hero />
 

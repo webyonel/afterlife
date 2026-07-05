@@ -4,12 +4,35 @@ import "../styles/global.css";
 interface Props {
   title?: string;
   description?: string;
+  // Imagen para compartir (Open Graph / Twitter). Si no se pasa, usa og-image.png.
+  ogImage?: string;
+  // Tipo de Open Graph. "website" para la home, "article" para interiores.
+  ogType?: "website" | "article" | "restaurant";
+  // URL canónica absoluta. Si no se pasa, usa SITE_URL + Astro.url.pathname.
+  canonical?: string;
+  // Permite a una página desactivar la indexación (ej: /admin).
+  noindex?: boolean;
 }
 
+// Identidad del sitio. Centralizada para no duplicar valores en cada
+// página y poder cambiarlos en un solo lugar (rebranding, nuevo dominio…).
+const SITE_NAME = "After Life";
+const SITE_URL = "https://afterlife.vercel.app";
+const DEFAULT_OG_IMAGE = "/og-image.png";
+const BRAND_COLOR = "#f5a623";
+const LOCALE = "es_ES";
+
 const {
-  title = "After Life — Pizzas, Hamburguesas y Lasañas Caseras",
-  description = "El sabor que buscas en un solo lugar. Masa crocante, carne jugosa y el toque casero que marca la diferencia. Pedí online o vení a disfrutarlo con nosotros.",
+  title = `${SITE_NAME} — Cafetería en Ciego de Ávila | Pizzas, Hamburguesas y Lasañas Caseras`,
+  description = "Cafetería After Life en Ciego de Ávila: pizzas, hamburguesas y lasañas caseras. Pedí online o vení a disfrutar el sabor que buscás, hecho con masa, queso y cariño.",
+  ogImage = DEFAULT_OG_IMAGE,
+  ogType = "website",
+  canonical,
+  noindex = false,
 } = Astro.props;
+
+const canonicalUrl = canonical ?? new URL(Astro.url.pathname, SITE_URL).toString();
+const ogImageUrl = new URL(ogImage, SITE_URL).toString();
 ---
 
 <!doctype html>
@@ -17,26 +40,81 @@ const {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content={BRAND_COLOR} />
+
+    {/* ---------- Título y descripción base ---------- */}
+    <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#f4f1ed" />
+
+    {/* ---------- Indexación ---------- */}
+    {
+      noindex ? (
+        <meta name="robots" content="noindex, nofollow" />
+      ) : (
+        <meta
+          name="robots"
+          content="index, follow, max-image-preview:large, max-snippet:-1"
+        />
+      )
+    }
+    <meta name="generator" content={Astro.generator} />
+    <meta name="author" content={SITE_NAME} />
+    <meta name="language" content="Spanish" />
+
+    {/* ---------- Canonical ---------- */}
+    <link rel="canonical" href={canonicalUrl} />
+
+    {/* ---------- Keywords (sirve de apoyo, no es factor de ranking crítico
+        pero refuerza señales para búsquedas como "cafetería Ciego de Ávila") ---------- */}
+    <meta
+      name="keywords"
+      content="After Life, cafetería Ciego de Ávila, cafetería en Ciego de Ávila, pizzas Ciego de Ávila, hamburguesas Ciego de Ávila, lasañas caseras, restaurante Cuba, comida a domicilio Ciego de Ávila, pizzas a la carta, cafetería After Life, café Ciego de Ávila"
+    />
+
+    {/* ---------- Geo (negocio local en Ciego de Ávila, Cuba) ---------- */}
+    <meta name="geo.region" content="CU-08" />
+    <meta name="geo.placename" content="Ciego de Ávila, Cuba" />
+    <meta name="geo.position" content="21.840000;-78.761944" />
+    <meta name="ICBM" content="21.840000, -78.761944" />
+
+    {/* ---------- Open Graph (Facebook, WhatsApp, Instagram, LinkedIn…) ----------
+        Los crawlers de WhatsApp y Facebook leen EXCLUSIVAMENTE og:* — por eso
+        son obligatorios si queremos que el preview de un enlace compartido
+        muestre imagen, título y descripción correctos. */}
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:locale" content={LOCALE} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:secure_url" content={ogImageUrl} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${SITE_NAME} — ${description}`} />
+
+    {/* ---------- Twitter / X Card ---------- */}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+    <meta name="twitter:image:alt" content={`${SITE_NAME} — ${description}`} />
+
+    {/* ---------- Favicon y apple touch ---------- */}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" />
-    <link
-      rel="preconnect"
-      href="https://fonts.googleapis.com"
-      crossorigin
-    />
-    <link
-      rel="preconnect"
-      href="https://fonts.gstatic.com"
-      crossorigin
-    />
+    <link rel="apple-touch-icon" href="/logo.png" />
+
+    {/* ---------- Fuentes ---------- */}
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
+    {/* Slot para que cada página inyecte JSON-LD u otros extras en <head> */}
+    <slot name="head" />
   </head>
   <body>
     <slot />

@@ -1,0 +1,12 @@
+# robots.txt — After Life
+# https://afterlife.vercel.app
+
+User-agent: *
+# Permitimos todo el sitio público.
+Allow: /
+# Bloqueamos el panel de administración: no queremos que Google indexe
+# /admin/* ni que aparezca en resultados de búsqueda.
+Disallow: /admin
+
+# Indicamos la ubicación del sitemap para acelerar la indexación.
+Sitemap: https://afterlife.vercel.app/sitemap.xml

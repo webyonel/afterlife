@@ -3,7 +3,11 @@ import Layout from "../../layouts/Layout.astro";
 import Navbar from "../../components/Navbar.astro";
 ---
 
-<Layout title="Panel de administración — After Life">
+<Layout
+  title="Panel de administración — After Life"
+  description="Acceso restringido al panel de administración de After Life."
+  noindex={true}
+>
   <Navbar />
 
   <main class="login">
