@@ -65,6 +65,115 @@ import Navbar from "../../components/Navbar.astro";
   </main>
 
   <div class="toast" role="status" aria-live="polite" data-toast hidden></div>
+
+  <!-- Modal: Nuevo producto. La capa de backdrop solo cierra al hacer click en ella
+       MISMA (no en hijos), y el input de archivo está dentro del card para que abrir
+       el picker del SO no cierre el modal. -->
+  <div class="modal-backdrop" data-modal hidden>
+    <div
+      class="modal-card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="new-product-title"
+    >
+      <header class="modal-head">
+        <div>
+          <span class="eyebrow">Catálogo</span>
+          <h2 id="new-product-title" class="modal-title">Nuevo producto</h2>
+        </div>
+        <button
+          type="button"
+          class="modal-close"
+          aria-label="Cerrar"
+          data-modal-close
+        >×</button>
+      </header>
+
+      <form class="modal-form" data-new-product-form novalidate>
+        <label class="field">
+          <span class="label">Nombre</span>
+          <input
+            type="text"
+            name="name"
+            required
+            minlength="2"
+            maxlength="80"
+            placeholder="Ej. Pizza Margarita"
+            data-new-product-name
+          />
+        </label>
+
+        <div class="field">
+          <span class="label">Categoría</span>
+          <select name="category_id" required data-new-product-category>
+            <!-- Options se renderizan desde el script -->
+          </select>
+        </div>
+
+        <label class="field">
+          <span class="label">Precio (cup)</span>
+          <input
+            type="number"
+            name="price"
+            required
+            min="1"
+            step="1"
+            placeholder="750"
+            inputmode="numeric"
+            data-new-product-price
+          />
+        </label>
+
+        <label class="field">
+          <span class="label">Descripción</span>
+          <textarea
+            name="description"
+            rows="3"
+            maxlength="500"
+            placeholder="Ingredientes, detalles…"
+            data-new-product-description
+          ></textarea>
+        </label>
+
+        <div class="field">
+          <span class="label">Imagen</span>
+          <label class="file-picker" for="new-product-image-input">
+            <span class="file-picker-icon" aria-hidden="true">🖼</span>
+            <span class="file-picker-text" data-file-picker-text>
+              Elegir imagen…
+            </span>
+            <input
+              type="file"
+              id="new-product-image-input"
+              class="visually-hidden"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              data-new-product-image
+            />
+          </label>
+          <div class="image-preview" data-image-preview hidden>
+            <img alt="" data-image-preview-img />
+            <button
+              type="button"
+              class="image-preview-remove"
+              aria-label="Quitar imagen"
+              data-image-preview-remove
+            >×</button>
+          </div>
+        </div>
+
+        <p class="form-error" data-form-error hidden></p>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" data-modal-close>
+            Cancelar
+          </button>
+          <button type="submit" class="btn-primary" data-form-submit>
+            <span data-submit-text>Crear producto</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </Layout>
 
 <style is:global>
@@ -502,6 +611,295 @@ import Navbar from "../../components/Navbar.astro";
       padding: 12px 12px;
     }
   }
+
+  /* ---------- Modal "Nuevo producto" ---------- */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 17, 17, 0.45);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    z-index: 1000;
+    padding: 32px 16px;
+    overflow-y: auto;
+    animation: backdropIn 0.18s ease-out;
+  }
+
+  /* El selector de clase .modal-backdrop gana al [hidden] del user-agent, así
+     que necesitamos pisarlo explícitamente cuando el atributo está presente. */
+  .modal-backdrop[hidden] {
+    display: none;
+  }
+
+  @keyframes backdropIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(8px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @media (min-width: 720px) {
+    .modal-backdrop {
+      align-items: center;
+    }
+  }
+
+  .modal-card {
+    width: 100%;
+    max-width: 480px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    animation: cardIn 0.22s ease-out;
+  }
+
+  .modal-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 24px 24px 8px;
+  }
+
+  .modal-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 4px 0 0;
+    color: var(--color-text);
+    letter-spacing: -0.01em;
+  }
+
+  .modal-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    flex-shrink: 0;
+  }
+
+  .modal-close:hover {
+    background: var(--color-surface-soft);
+    color: var(--color-text);
+  }
+
+  .modal-form {
+    padding: 16px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .modal-form .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .modal-form .label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text);
+  }
+
+  .modal-form input[type="text"],
+  .modal-form input[type="number"],
+  .modal-form textarea,
+  .modal-form select {
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-soft);
+    border-radius: 12px;
+    padding: 11px 14px;
+    font-size: 14px;
+    color: var(--color-text);
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .modal-form textarea {
+    resize: vertical;
+    min-height: 64px;
+    border-radius: 12px;
+    font-family: inherit;
+  }
+
+  .modal-form input:hover,
+  .modal-form textarea:hover,
+  .modal-form select:hover {
+    border-color: #c8c8c8;
+  }
+
+  .modal-form input:focus,
+  .modal-form textarea:focus,
+  .modal-form select:focus {
+    border-color: var(--color-brand);
+    background: var(--color-surface);
+    box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.18);
+  }
+
+  .modal-form input[aria-invalid="true"],
+  .modal-form textarea[aria-invalid="true"],
+  .modal-form select[aria-invalid="true"] {
+    border-color: #c0392b;
+  }
+
+  .file-picker {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--color-surface-soft);
+    border: 1px dashed var(--color-border);
+    border-radius: 12px;
+    color: var(--color-text);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+    user-select: none;
+  }
+
+  .file-picker:hover {
+    border-color: var(--color-brand);
+    background: var(--color-surface);
+  }
+
+  .file-picker-icon {
+    font-size: 18px;
+  }
+
+  .file-picker-text {
+    color: var(--color-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 280px;
+  }
+
+  .image-preview {
+    position: relative;
+    margin-top: 8px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-soft);
+    max-height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .image-preview img {
+    display: block;
+    max-width: 100%;
+    max-height: 220px;
+    object-fit: contain;
+  }
+
+  .image-preview-remove {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  .image-preview-remove:hover {
+    background: rgba(0, 0, 0, 0.85);
+  }
+
+  .form-error {
+    margin: 0;
+    color: #c0392b;
+    background: #fdecea;
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-size: 13px;
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 6px;
+  }
+
+  .btn-secondary,
+  .btn-primary {
+    border-radius: var(--radius-pill);
+    padding: 11px 22px;
+    font-weight: 600;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease, opacity 0.2s ease;
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+  }
+
+  .btn-secondary:hover {
+    background: var(--color-surface-soft);
+  }
+
+  .btn-primary {
+    background: var(--color-brand);
+    color: #fff;
+    border: none;
+  }
+
+  .btn-primary:hover {
+    background: var(--color-brand-dark, #d68a0e);
+  }
+
+  .btn-primary:active,
+  .btn-secondary:active {
+    transform: scale(0.98);
+  }
+
+  .btn-primary:disabled,
+  .btn-secondary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
 </style>
 
 <script>
@@ -822,6 +1220,8 @@ import Navbar from "../../components/Navbar.astro";
       id: c.id,
       name: c.name,
     }));
+    // Cachear categorías para alimentar el <select> del modal "Nuevo producto"
+    categoriesCache = categories;
     const products = productsResult.data.map((p) => {
       const cat = p.categories as { name: string } | { name: string }[] | null;
       const categoryName = Array.isArray(cat)
@@ -840,10 +1240,340 @@ import Navbar from "../../components/Navbar.astro";
 
     renderFilters(categories);
     renderProducts(products);
+    // Pre-poblamos el <select> del modal aunque todavía esté oculto, así si el
+    // usuario abre el modal antes de que termine otro render seguimos teniendo
+    // las categorías disponibles.
+    fillCategoryOptions();
   })();
 
-  // 3) Botón "Nuevo producto" (TODO)
-  newProductBtn.addEventListener("click", () => showComingSoon("Crear producto"));
+  // 3) Modal "Nuevo producto" — refs y estado
+  const modalBackdrop = requireEl(
+    document.querySelector<HTMLElement>("[data-modal]"),
+    "Falta el modal",
+  );
+  const modalCard = requireEl(
+    modalBackdrop.querySelector<HTMLElement>(".modal-card"),
+    "Falta la tarjeta del modal",
+  );
+  const modalForm = requireEl(
+    modalBackdrop.querySelector<HTMLFormElement>("[data-new-product-form]"),
+    "Falta el formulario del modal",
+  );
+  const modalName = requireEl(
+    modalForm.querySelector<HTMLInputElement>("[data-new-product-name]"),
+    "Falta el input de nombre",
+  );
+  const modalCategory = requireEl(
+    modalForm.querySelector<HTMLSelectElement>("[data-new-product-category]"),
+    "Falta el select de categoría",
+  );
+  const modalPrice = requireEl(
+    modalForm.querySelector<HTMLInputElement>("[data-new-product-price]"),
+    "Falta el input de precio",
+  );
+  const modalDescription = requireEl(
+    modalForm.querySelector<HTMLTextAreaElement>("[data-new-product-description]"),
+    "Falta el textarea de descripción",
+  );
+  const modalFileInput = requireEl(
+    modalForm.querySelector<HTMLInputElement>("[data-new-product-image]"),
+    "Falta el input de imagen",
+  );
+  const filePickerText = requireEl(
+    modalForm.querySelector<HTMLElement>("[data-file-picker-text]"),
+    "Falta el texto del picker",
+  );
+  const imagePreview = requireEl(
+    modalForm.querySelector<HTMLElement>("[data-image-preview]"),
+    "Falta el preview",
+  );
+  const imagePreviewImg = requireEl(
+    modalForm.querySelector<HTMLImageElement>("[data-image-preview-img]"),
+    "Falta la imagen del preview",
+  );
+  const imagePreviewRemove = requireEl(
+    modalForm.querySelector<HTMLButtonElement>("[data-image-preview-remove]"),
+    "Falta el botón de quitar preview",
+  );
+  const formError = requireEl(
+    modalForm.querySelector<HTMLElement>("[data-form-error]"),
+    "Falta el banner de error del form",
+  );
+  const submitBtn = requireEl(
+    modalForm.querySelector<HTMLButtonElement>("[data-form-submit]"),
+    "Falta el botón de submit",
+  );
+  const submitText = requireEl(
+    submitBtn.querySelector<HTMLElement>("[data-submit-text]"),
+    "Falta el texto del submit",
+  );
+
+  let categoriesCache: Array<{ id: string; name: string }> = [];
+
+  function setSubmitting(isSubmitting: boolean): void {
+    submitBtn.disabled = isSubmitting;
+    modalForm
+      .querySelectorAll<HTMLInputElement | HTMLButtonElement>(
+        "input, button:not([data-modal-close])",
+      )
+      .forEach((el) => {
+        if (el !== submitBtn) (el as HTMLInputElement | HTMLButtonElement).disabled = isSubmitting;
+      });
+    submitText.textContent = isSubmitting ? "Creando…" : "Crear producto";
+  }
+
+  function showFormError(message: string): void {
+    formError.textContent = message;
+    formError.hidden = false;
+  }
+
+  function clearFormError(): void {
+    formError.hidden = true;
+    formError.textContent = "";
+  }
+
+  function validateModal(): string | null {
+    const name = modalName.value.trim();
+    if (name.length < 2) return "El nombre debe tener al menos 2 caracteres.";
+    if (!modalCategory.value) return "Selecciona una categoría.";
+    const price = Number(modalPrice.value);
+    if (!Number.isFinite(price) || price <= 0) {
+      return "El precio debe ser un número mayor que 0.";
+    }
+    const file = modalFileInput.files?.[0];
+    if (file && !file.type.startsWith("image/")) {
+      return "El archivo seleccionado no es una imagen.";
+    }
+    if (file && file.size > 5 * 1024 * 1024) {
+      return "La imagen no puede pesar más de 5 MB.";
+    }
+    return null;
+  }
+
+  function resetModal(): void {
+    modalForm.reset();
+    filePickerText.textContent = "Elegir imagen…";
+    imagePreview.hidden = true;
+    if (imagePreviewImg.src.startsWith("blob:")) {
+      URL.revokeObjectURL(imagePreviewImg.src);
+    }
+    imagePreviewImg.removeAttribute("src");
+    clearFormError();
+  }
+
+  function fillCategoryOptions(): void {
+    modalCategory.innerHTML = "";
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.disabled = true;
+    placeholder.selected = true;
+    placeholder.textContent = "Selecciona…";
+    modalCategory.appendChild(placeholder);
+
+    for (const cat of categoriesCache) {
+      const opt = document.createElement("option");
+      opt.value = cat.id;
+      opt.textContent = cat.name;
+      modalCategory.appendChild(opt);
+    }
+  }
+
+  function openModal(): void {
+    if (categoriesCache.length === 0) {
+      showToast("Cargando categorías, intenta en un momento…");
+      return;
+    }
+    fillCategoryOptions();
+    resetModal();
+    modalBackdrop.hidden = false;
+    // Prevenir scroll del body mientras el modal está abierto
+    document.body.style.overflow = "hidden";
+    // Foco en el primer campo tras la animación
+    window.setTimeout(() => modalName.focus(), 50);
+  }
+
+  function closeModal(): void {
+    modalBackdrop.hidden = true;
+    document.body.style.overflow = "";
+    if (imagePreviewImg.src.startsWith("blob:")) {
+      URL.revokeObjectURL(imagePreviewImg.src);
+    }
+  }
+
+  function refreshTable(): void {
+    // Vuelve a fetchear categorías + productos para reflejar el nuevo item
+    void (async () => {
+      const [categoriesResult, productsResult] = await Promise.all([
+        supabase
+          .from("categories")
+          .select("id, name")
+          .eq("is_active", true)
+          .order("display_order", { ascending: true }),
+        supabase
+          .from("products")
+          .select(
+            "id, name, image_url, price, is_active, category_id, categories(name)",
+          )
+          .order("display_order", { ascending: true }),
+      ]);
+
+      if (productsResult.error || !productsResult.data) {
+        console.warn("products refetch failed", productsResult.error);
+        return;
+      }
+
+      categoriesCache = (categoriesResult.data ?? []).map((c) => ({
+        id: c.id,
+        name: c.name,
+      }));
+
+      const products = productsResult.data.map((p) => {
+        const cat = p.categories as { name: string } | { name: string }[] | null;
+        const categoryName = Array.isArray(cat)
+          ? cat[0]?.name ?? null
+          : cat?.name ?? null;
+        return {
+          id: p.id,
+          name: p.name,
+          image_url: p.image_url,
+          price: p.price,
+          is_active: p.is_active,
+          category_id: p.category_id,
+          category_name: categoryName,
+        };
+      });
+
+      renderFilters(categoriesCache);
+      renderProducts(products);
+      fillCategoryOptions();
+    })();
+  }
+
+  // --- Apertura / cierre del modal ---
+
+  // Abrir con el botón "+ Nuevo producto"
+  newProductBtn.addEventListener("click", openModal);
+
+  // Cerrar: SOLO si el click fue en el backdrop mismo, NO en un hijo.
+  // ESTO ES LO QUE IMPIDE que abrir el file picker (click en el label
+  // que vive DENTRO del modal) cierre el modal por accidente.
+  modalBackdrop.addEventListener("click", (event) => {
+    if (event.target === modalBackdrop) {
+      closeModal();
+    }
+  });
+
+  // Cerrar: botones con data-modal-close (X arriba a la derecha + "Cancelar")
+  modalBackdrop
+    .querySelectorAll<HTMLButtonElement>("[data-modal-close]")
+    .forEach((btn) => btn.addEventListener("click", closeModal));
+
+  // Cerrar: tecla Escape
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !modalBackdrop.hidden) {
+      closeModal();
+    }
+  });
+
+  // --- File picker (¡importante: NO cierra el modal!) ---
+  //
+  // El handler de "change" SOLO actualiza el preview y guarda el nombre
+  // del archivo. NO llama a closeModal ni a nada que pueda cerrar el modal.
+  // El click que abre el picker tampoco burbujea al backdrop porque ese
+  // listener exige que event.target === modalBackdrop (ver más arriba).
+  modalFileInput.addEventListener("change", () => {
+    const file = modalFileInput.files?.[0];
+    if (!file) {
+      imagePreview.hidden = true;
+      imagePreviewImg.removeAttribute("src");
+      filePickerText.textContent = "Elegir imagen…";
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+    imagePreviewImg.src = url;
+    imagePreviewImg.alt = `Vista previa de ${file.name}`;
+    imagePreview.hidden = false;
+    filePickerText.textContent = file.name;
+  });
+
+  // Quitar imagen seleccionada
+  imagePreviewRemove.addEventListener("click", () => {
+    modalFileInput.value = "";
+    imagePreview.hidden = true;
+    if (imagePreviewImg.src.startsWith("blob:")) {
+      URL.revokeObjectURL(imagePreviewImg.src);
+    }
+    imagePreviewImg.removeAttribute("src");
+    filePickerText.textContent = "Elegir imagen…";
+  });
+
+  // --- Submit del formulario ---
+  modalForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    clearFormError();
+
+    const validationError = validateModal();
+    if (validationError) {
+      showFormError(validationError);
+      return;
+    }
+
+    const name = modalName.value.trim();
+    const categoryId = modalCategory.value;
+    const price = Number(modalPrice.value);
+    const description = modalDescription.value.trim();
+    const file = modalFileInput.files?.[0];
+
+    setSubmitting(true);
+
+    // 1) Subir imagen si hay
+    let imageUrl: string | null = null;
+    if (file) {
+      const safeExt = (file.name.match(/\.[a-z0-9]+$/i)?.[0] ?? ".png").toLowerCase();
+      const random = crypto.randomUUID().split("-")[0];
+      const path = `products/${Date.now()}-${random}${safeExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("products")
+        .upload(path, file, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: file.type,
+        });
+
+      if (uploadError) {
+        setSubmitting(false);
+        showFormError(`No se pudo subir la imagen: ${uploadError.message}`);
+        return;
+      }
+
+      const { data: pub } = supabase.storage.from("products").getPublicUrl(path);
+      imageUrl = pub.publicUrl;
+    }
+
+    // 2) Insertar producto
+    const { error: insertError } = await supabase.from("products").insert({
+      name,
+      description,
+      price,
+      category_id: categoryId,
+      image_url: imageUrl,
+      is_active: true,
+      display_order: 0,
+    });
+
+    setSubmitting(false);
+
+    if (insertError) {
+      showFormError(`No se pudo crear el producto: ${insertError.message}`);
+      return;
+    }
+
+    showToast(`"${name}" creado correctamente.`);
+    closeModal();
+    refreshTable();
+  });
 
   // 4) Misma rueda-vertical → scroll-horizontal que CategoryTabs del sitio público.
   //    Así el pill se puede deslizar con la rueda del ratón en laptops, no solo con
