@@ -2,65 +2,90 @@
 import Layout from "../../layouts/Layout.astro";
 import Navbar from "../../components/Navbar.astro";
 
-// Placeholder del panel admin.
-//
-// TODO: este archivo es solo el destino del flujo de login. El panel real
-// (CRUD de productos/categorías, gestión de menú) se construirá después.
-// Como el proyecto es SSG (sin SSR/middleware), las páginas /admin/* deben
-// confiar en RLS del lado de Supabase para proteger datos reales — el guard
-// client-side de abajo sólo bloquea la UI visible.
+// Panel admin — Productos.
+// Layout + filtros + tabla. La creación/edición/eliminación todavía no están
+// implementadas (los botones abren un toast "Próximamente"). El switch de
+// disponibilidad sí persiste en Supabase vía UPDATE sobre la fila del producto.
 ---
 
 <Layout title="Panel — After Life">
   <Navbar />
 
-  <main class="panel">
-    <section class="card" aria-labelledby="panel-title">
-      <header class="head">
-        <span class="eyebrow">Panel de administración</span>
-        <h1 id="panel-title" class="title">Sesión iniciada</h1>
-        <p class="lead">
-          Bienvenido, <span data-panel-email>administrador</span>.
-        </p>
-      </header>
+  <main class="admin">
+    <header class="head">
+      <div class="head-text">
+        <span class="eyebrow">Catálogo</span>
+        <h1 class="title">Productos</h1>
+        <p class="lead">Gestiona el menú de pizzas, hamburguesas, lasañas y más.</p>
+      </div>
+      <button class="new-btn" type="button" data-action="new-product">
+        <span aria-hidden="true">+</span>
+        Nuevo producto
+      </button>
+    </header>
 
-      <p class="placeholder">
-        Pronto aquí podrás gestionar el menú, productos y categorías del sitio.
+    <section class="filters-wrap" aria-label="Filtrar por categoría">
+      <div class="filters" role="tablist" data-filters data-h-scroll>
+        <!-- Pills se renderizan desde el cliente con las categorías reales de Supabase -->
+      </div>
+    </section>
+
+    <section class="table-card">
+      <div class="table-scroll">
+        <table class="catalog" aria-label="Listado de productos">
+          <thead>
+            <tr>
+              <th class="th-img" scope="col">Imagen</th>
+              <th class="th-name" scope="col">Producto</th>
+              <th class="th-cat" scope="col">Categoría</th>
+              <th class="th-price" scope="col">Precio</th>
+              <th class="th-actions" scope="col" aria-label="Acciones"></th>
+            </tr>
+          </thead>
+          <tbody data-products>
+            <tr class="loading-row" aria-hidden="true">
+              <td colspan="5">
+                <span class="loading-dots" aria-hidden="true"></span>
+                <span class="sr-only">Cargando productos…</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="empty" data-empty hidden>
+        No hay productos todavía. Crea el primero con el botón
+        <strong>+ Nuevo producto</strong>.
       </p>
 
-      <button type="button" class="logout" data-panel-logout>
-        Cerrar sesión
-      </button>
-
-      <footer class="foot">
-        <a href="/" class="back">← Volver al sitio</a>
-      </footer>
+      <p class="error-msg" data-error hidden role="alert">
+        No pudimos cargar los productos. Intenta recargar la página.
+      </p>
     </section>
   </main>
+
+  <div class="toast" role="status" aria-live="polite" data-toast hidden></div>
 </Layout>
 
-<style>
-  .panel {
-    min-height: calc(100vh - 120px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px 16px 80px;
+<style is:global>
+  .admin {
+    max-width: var(--container-grid, 1200px);
+    margin: 0 auto;
+    padding: 16px 16px 80px;
   }
 
-  .card {
-    width: 100%;
-    max-width: 440px;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-card);
-    padding: clamp(28px, 4vw, 40px) clamp(24px, 4vw, 32px);
-    box-shadow: var(--shadow-nav);
-  }
-
+  /* ---------- Header ---------- */
   .head {
-    text-align: center;
-    margin-bottom: 24px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 8px 0 28px;
+  }
+
+  .head-text {
+    min-width: 0;
   }
 
   .eyebrow {
@@ -70,14 +95,14 @@ import Navbar from "../../components/Navbar.astro";
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    margin: 0 0 10px;
+    margin: 0 0 8px;
   }
 
   .title {
-    font-size: clamp(24px, 3vw, 30px);
+    font-size: clamp(28px, 3.4vw, 36px);
     font-weight: 700;
     color: var(--color-text);
-    margin: 0 0 8px;
+    margin: 0 0 6px;
     letter-spacing: -0.02em;
   }
 
@@ -86,94 +111,764 @@ import Navbar from "../../components/Navbar.astro";
     font-size: 14px;
     margin: 0;
     line-height: 1.5;
+    max-width: 52ch;
   }
 
-  .placeholder {
-    color: var(--color-text-muted);
-    font-size: 14px;
-    text-align: center;
-    line-height: 1.55;
-    margin: 0 0 24px;
-    padding: 16px;
-    background: var(--color-surface-soft);
-    border-radius: var(--radius-card);
-  }
-
-  .logout {
-    display: block;
-    width: 100%;
-    background: var(--color-surface);
-    color: var(--color-text);
-    border: 1px solid var(--color-border);
-    font-weight: 600;
-    font-size: 15px;
+  .new-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 22px;
+    background: var(--color-brand);
+    color: #fff;
+    border: none;
     border-radius: var(--radius-pill);
-    padding: 14px 24px;
-    transition: background 0.2s ease, border-color 0.2s ease, transform 0.1s ease, opacity 0.2s ease;
-    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
     font-family: inherit;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease, opacity 0.2s ease;
   }
 
-  .logout:hover {
-    background: var(--color-surface-soft);
-    border-color: var(--color-text-muted);
+  .new-btn:hover {
+    background: var(--color-brand-dark, #d68a0e);
   }
 
-  .logout:active {
+  .new-btn:active {
     transform: scale(0.98);
   }
 
-  .logout:disabled {
-    opacity: 0.65;
+  .new-btn:disabled {
+    opacity: 0.55;
     cursor: not-allowed;
     transform: none;
   }
 
-  .foot {
-    margin-top: 24px;
-    text-align: center;
+  /* ---------- Filtros ---------- (mismo estilo que el CategoryTabs del sitio público) */
+  .filters-wrap {
+    width: 100%;
+    max-width: var(--container-grid);
+    margin: clamp(32px, 5vw, 44px) auto 28px;
+    padding: 0 16px;
   }
 
-  .back {
+  .filters {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--color-surface-soft);
+    border-radius: var(--radius-pill);
+    padding: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter {
+    border: none;
+    background: transparent;
     color: var(--color-text-muted);
-    text-decoration: none;
-    font-size: 13px;
-    transition: color 0.2s ease;
+    font-family: inherit;
+    font-size: clamp(14px, 1.2vw, 16px);
+    font-weight: 500;
+    padding: 10px 18px;
+    border-radius: var(--radius-pill);
+    transition: background-color 0.2s ease, color 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+    scroll-snap-align: start;
   }
 
-  .back:hover {
+  .filter:hover {
     color: var(--color-text);
+  }
+
+  .filter.active {
+    background: var(--color-brand);
+    color: #fff;
+  }
+
+  @media (min-width: 768px) {
+    .filter {
+      padding: 10px 22px;
+    }
+  }
+
+  /* ---------- Card de tabla ---------- */
+  .table-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-nav);
+    overflow: hidden;
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+  }
+
+  .catalog {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    color: var(--color-text);
+  }
+
+  .catalog th,
+  .catalog td {
+    padding: 14px 18px;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  .catalog thead th {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    background: var(--color-surface-soft);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .catalog tbody tr {
+    border-bottom: 1px solid var(--color-border);
+    transition: background-color 0.15s ease;
+  }
+
+  .catalog tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .catalog tbody tr:hover {
+    background: var(--color-surface-soft);
+  }
+
+  .th-img {
+    width: 84px;
+  }
+
+  .th-price {
+    width: 110px;
+    text-align: right;
+  }
+
+  .th-actions {
+    width: 168px;
+    text-align: right;
+  }
+
+  .col-img {
+    width: 84px;
+  }
+
+  .col-price {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .col-actions {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .thumb {
+    display: block;
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-thumb, 12px);
+    object-fit: cover;
+    background: var(--color-surface-soft);
+    border: 1px solid var(--color-border);
+  }
+
+  .thumb-fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-thumb, 12px);
+    background: var(--color-surface-soft);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    font-size: 18px;
+    font-weight: 700;
+    user-select: none;
+  }
+
+  .col-name {
+    font-weight: 600;
+  }
+
+  .col-cat {
+    color: var(--color-text-muted);
+  }
+
+  /* ---------- Switch ---------- */
+  .switch {
+    display: inline-block;
+    position: relative;
+    width: 44px;
+    height: 24px;
+    cursor: pointer;
+    vertical-align: middle;
+    margin-right: 14px;
+  }
+
+  .switch input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .switch .track {
+    position: absolute;
+    inset: 0;
+    background: #d0d0d0;
+    border-radius: 999px;
+    transition: background 0.2s ease;
+  }
+
+  .switch .handle {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+    pointer-events: none;
+  }
+
+  .switch input:checked + .track {
+    background: var(--color-brand);
+  }
+
+  .switch input:checked + .track .handle {
+    transform: translateX(20px);
+  }
+
+  .switch input:focus-visible + .track {
+    box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.35);
+  }
+
+  .switch.is-saving {
+    opacity: 0.6;
+    cursor: wait;
+  }
+
+  /* ---------- Iconos de acción ---------- */
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    border-radius: 999px;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  .icon-btn:hover {
+    background: var(--color-surface-soft);
+    color: var(--color-text);
+  }
+
+  .icon-btn.danger:hover {
+    background: #fdecea;
+    color: #c0392b;
+  }
+
+  .icon-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* ---------- Estados: loading / vacío / error ---------- */
+  .loading-row td {
+    padding: 36px;
+    text-align: center;
+    color: var(--color-text-muted);
+  }
+
+  .loading-dots {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-text-muted);
+    margin: 0 auto;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+
+  .empty,
+  .error-msg {
+    margin: 0;
+    padding: 28px 24px;
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 14px;
+  }
+
+  .empty strong {
+    color: var(--color-text);
+  }
+
+  .error-msg {
+    color: #c0392b;
+    background: #fdecea;
+  }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(12px);
+    background: #1a1a1a;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: var(--radius-pill);
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 100;
+  }
+
+  .toast[data-shown="true"] {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ---------- A11y ---------- */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 720px) {
+    .head {
+      align-items: stretch;
+    }
+
+    .new-btn {
+      align-self: flex-start;
+    }
+
+    .th-img,
+    .col-img,
+    .thumb,
+    .thumb-fallback {
+      width: 44px;
+      height: 44px;
+    }
+
+    .catalog th,
+    .catalog td {
+      padding: 12px 12px;
+    }
   }
 </style>
 
 <script>
   import { supabase } from "../../lib/supabase";
 
-  const emailEl = document.querySelector<HTMLSpanElement>("[data-panel-email]");
-  const logoutButton = document.querySelector<HTMLButtonElement>("[data-panel-logout]");
-
-  async function redirectToLogin(): Promise<void> {
-    window.location.replace("/admin/login");
+  // Helper to narrow querySelector results (closes lose the narrowing otherwise)
+  function requireEl<T>(value: T | null, message: string): T {
+    if (value === null) throw new Error(message);
+    return value;
   }
 
-  void (async () => {
-    const { data, error } = await supabase.auth.getSession();
+  // ---------- Referencias al DOM ----------
+  const filtersContainer = requireEl(
+    document.querySelector<HTMLElement>("[data-filters]"),
+    "Falta el contenedor de filtros",
+  );
+  const productsBody = requireEl(
+    document.querySelector<HTMLTableSectionElement>("[data-products]"),
+    "Falta el tbody de productos",
+  );
+  const emptyState = requireEl(
+    document.querySelector<HTMLElement>("[data-empty]"),
+    "Falta el mensaje vacío",
+  );
+  const errorState = requireEl(
+    document.querySelector<HTMLElement>("[data-error]"),
+    "Falta el mensaje de error",
+  );
+  const newProductBtn = requireEl(
+    document.querySelector<HTMLButtonElement>("[data-action=\"new-product\"]"),
+    "Falta el botón de nuevo producto",
+  );
+  const toast = requireEl(
+    document.querySelector<HTMLElement>("[data-toast]"),
+    "Falta el toast",
+  );
 
-    if (error || !data.session) {
-      redirectToLogin();
+  const ALL_FILTER = "__all__";
+  let activeFilter = ALL_FILTER;
+  let toastTimer: number | null = null;
+
+  // ---------- Render helpers ----------
+  function formatPrice(value: number): string {
+    return `${value} cup`;
+  }
+
+  function showToast(message: string): void {
+    toast.textContent = message;
+    toast.hidden = false;
+    toast.setAttribute("data-shown", "true");
+    if (toastTimer !== null) window.clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(() => {
+      toast.setAttribute("data-shown", "false");
+      toastTimer = null;
+    }, 2200);
+  }
+
+  function showComingSoon(label: string): void {
+    showToast(`${label} — Próximamente.`);
+  }
+
+  function renderFilters(categories: Array<{ id: string; name: string }>): void {
+    filtersContainer.innerHTML = "";
+    const allButton = document.createElement("button");
+    allButton.type = "button";
+    allButton.role = "tab";
+    allButton.className = "filter active";
+    allButton.dataset.filter = ALL_FILTER;
+    allButton.textContent = "Todos";
+    allButton.setAttribute("aria-selected", "true");
+    filtersContainer.appendChild(allButton);
+
+    for (const cat of categories) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.role = "tab";
+      btn.className = "filter";
+      btn.dataset.filter = cat.id;
+      btn.textContent = cat.name;
+      btn.setAttribute("aria-selected", "false");
+      filtersContainer.appendChild(btn);
+    }
+
+    filtersContainer.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const filterBtn = target.closest<HTMLButtonElement>(".filter");
+      if (!filterBtn) return;
+
+      const filter = filterBtn.dataset.filter ?? ALL_FILTER;
+      activeFilter = filter;
+
+      for (const btn of filtersContainer.querySelectorAll<HTMLButtonElement>(".filter")) {
+        const isActive = btn === filterBtn;
+        btn.classList.toggle("active", isActive);
+        btn.setAttribute("aria-selected", String(isActive));
+      }
+
+      applyFilter();
+    });
+  }
+
+  function applyFilter(): void {
+    let visibleCount = 0;
+    for (const row of productsBody.querySelectorAll<HTMLTableRowElement>("tr[data-product-row]")) {
+      const match = activeFilter === ALL_FILTER || row.dataset.categoryId === activeFilter;
+      row.hidden = !match;
+      if (match) visibleCount++;
+    }
+
+    const hasProducts = productsBody.querySelector("tr[data-product-row]") !== null;
+    if (!hasProducts) {
+      emptyState.hidden = false;
+    } else if (visibleCount === 0) {
+      emptyState.textContent = "No hay productos en esta categoría.";
+      emptyState.hidden = false;
+    } else {
+      emptyState.hidden = true;
+    }
+  }
+
+  function buildProductRow(product: {
+    id: string;
+    name: string;
+    image_url: string | null;
+    price: number;
+    is_active: boolean;
+    category_name: string | null;
+    category_id: string;
+  }): HTMLTableRowElement {
+    const row = document.createElement("tr");
+    row.dataset.productRow = "true";
+    row.dataset.categoryId = product.category_id;
+
+    // Imagen
+    const imgCell = document.createElement("td");
+    imgCell.className = "col-img";
+    if (product.image_url) {
+      const img = document.createElement("img");
+      img.className = "thumb";
+      img.src = product.image_url;
+      img.alt = "";
+      img.loading = "lazy";
+      img.width = 56;
+      img.height = 56;
+      imgCell.appendChild(img);
+    } else {
+      const fallback = document.createElement("span");
+      fallback.className = "thumb-fallback";
+      fallback.setAttribute("aria-hidden", "true");
+      fallback.textContent = (product.name[0] ?? "?").toUpperCase();
+      imgCell.appendChild(fallback);
+    }
+    row.appendChild(imgCell);
+
+    // Nombre
+    const nameCell = document.createElement("td");
+    nameCell.className = "col-name";
+    nameCell.textContent = product.name;
+    row.appendChild(nameCell);
+
+    // Categoría
+    const catCell = document.createElement("td");
+    catCell.className = "col-cat";
+    catCell.textContent = product.category_name ?? "—";
+    row.appendChild(catCell);
+
+    // Precio
+    const priceCell = document.createElement("td");
+    priceCell.className = "col-price";
+    priceCell.textContent = formatPrice(product.price);
+    row.appendChild(priceCell);
+
+    // Acciones: switch + edit + delete
+    const actionsCell = document.createElement("td");
+    actionsCell.className = "col-actions";
+
+    const switchLabel = document.createElement("label");
+    switchLabel.className = "switch";
+    const switchInput = document.createElement("input");
+    switchInput.type = "checkbox";
+    switchInput.role = "switch";
+    switchInput.checked = product.is_active;
+    switchInput.setAttribute(
+      "aria-label",
+      product.is_active
+        ? `Marcar ${product.name} como no disponible`
+        : `Marcar ${product.name} como disponible`,
+    );
+    const track = document.createElement("span");
+    track.className = "track";
+    const handle = document.createElement("span");
+    handle.className = "handle";
+    track.appendChild(handle);
+    switchLabel.appendChild(switchInput);
+    switchLabel.appendChild(track);
+
+    switchInput.addEventListener("change", async () => {
+      const nextValue = switchInput.checked;
+      switchLabel.classList.add("is-saving");
+      switchInput.disabled = true;
+
+      const { error } = await supabase
+        .from("products")
+        .update({ is_active: nextValue })
+        .eq("id", product.id);
+
+      switchLabel.classList.remove("is-saving");
+      switchInput.disabled = false;
+
+      if (error) {
+        // Revert optimistic UI
+        switchInput.checked = !nextValue;
+        showToast("No se pudo guardar el cambio. Intenta de nuevo.");
+        console.warn("products update failed", error);
+        return;
+      }
+
+      switchInput.setAttribute(
+        "aria-label",
+        nextValue
+          ? `Marcar ${product.name} como no disponible`
+          : `Marcar ${product.name} como disponible`,
+      );
+    });
+
+    actionsCell.appendChild(switchLabel);
+
+    const editBtn = document.createElement("button");
+    editBtn.type = "button";
+    editBtn.className = "icon-btn";
+    editBtn.setAttribute("aria-label", `Editar ${product.name}`);
+    editBtn.dataset.action = "edit-product";
+    editBtn.dataset.productId = product.id;
+    editBtn.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+    editBtn.addEventListener("click", () => showComingSoon("Editar"));
+    actionsCell.appendChild(editBtn);
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "icon-btn danger";
+    deleteBtn.setAttribute("aria-label", `Eliminar ${product.name}`);
+    deleteBtn.dataset.action = "delete-product";
+    deleteBtn.dataset.productId = product.id;
+    deleteBtn.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>';
+    deleteBtn.addEventListener("click", () => showComingSoon("Eliminar"));
+    actionsCell.appendChild(deleteBtn);
+
+    row.appendChild(actionsCell);
+    return row;
+  }
+
+  function renderProducts(
+    products: Array<{
+      id: string;
+      name: string;
+      image_url: string | null;
+      price: number;
+      is_active: boolean;
+      category_name: string | null;
+      category_id: string;
+    }>,
+  ): void {
+    // Quita el skeleton row pero conserva el contenedor
+    for (const child of Array.from(productsBody.children)) {
+      child.remove();
+    }
+
+    if (products.length === 0) {
+      applyFilter();
       return;
     }
 
-    const email = data.session.user.email ?? "administrador";
-    if (emailEl) emailEl.textContent = email;
-
-    if (logoutButton) {
-      logoutButton.addEventListener("click", async () => {
-        logoutButton.disabled = true;
-        logoutButton.textContent = "Cerrando sesión…";
-        await supabase.auth.signOut();
-        redirectToLogin();
-      });
+    for (const product of products) {
+      productsBody.appendChild(buildProductRow(product));
     }
+
+    applyFilter();
+  }
+
+  // ---------- Hilo principal ----------
+  void (async () => {
+    // 1) Sesión: si no hay, redirigir al login
+    const sessionResult = await supabase.auth.getSession();
+    if (sessionResult.error || !sessionResult.data.session) {
+      window.location.replace("/admin/login");
+      return;
+    }
+
+    // 2) Cargar categorías y productos en paralelo
+    const [categoriesResult, productsResult] = await Promise.all([
+      supabase
+        .from("categories")
+        .select("id, name")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true }),
+      supabase
+        .from("products")
+        .select(
+          "id, name, image_url, price, is_active, category_id, categories(name)",
+        )
+        .order("display_order", { ascending: true }),
+    ]);
+
+    if (categoriesResult.error) {
+      console.warn("categories fetch failed", categoriesResult.error);
+    }
+    if (productsResult.error || !productsResult.data) {
+      productsBody.innerHTML = "";
+      errorState.hidden = false;
+      console.warn("products fetch failed", productsResult.error);
+      return;
+    }
+
+    const categories = (categoriesResult.data ?? []).map((c) => ({
+      id: c.id,
+      name: c.name,
+    }));
+    const products = productsResult.data.map((p) => {
+      const cat = p.categories as { name: string } | { name: string }[] | null;
+      const categoryName = Array.isArray(cat)
+        ? cat[0]?.name ?? null
+        : cat?.name ?? null;
+      return {
+        id: p.id,
+        name: p.name,
+        image_url: p.image_url,
+        price: p.price,
+        is_active: p.is_active,
+        category_id: p.category_id,
+        category_name: categoryName,
+      };
+    });
+
+    renderFilters(categories);
+    renderProducts(products);
   })();
+
+  // 3) Botón "Nuevo producto" (TODO)
+  newProductBtn.addEventListener("click", () => showComingSoon("Crear producto"));
+
+  // 4) Misma rueda-vertical → scroll-horizontal que CategoryTabs del sitio público.
+  //    Así el pill se puede deslizar con la rueda del ratón en laptops, no solo con
+  //    touchpad o pantalla táctil. Respeta scroll horizontal y permite salir vertical
+  //    en los extremos.
+  document
+    .querySelectorAll<HTMLElement>("[data-h-scroll]")
+    .forEach((el) => {
+      el.addEventListener(
+        "wheel",
+        (e) => {
+          if (e.deltaY === 0) return;
+          if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+
+          const max = el.scrollWidth - el.clientWidth;
+          if (max <= 0) return;
+
+          const atStart = el.scrollLeft <= 0 && e.deltaY < 0;
+          const atEnd = el.scrollLeft >= max - 1 && e.deltaY > 0;
+          if (atStart || atEnd) return;
+
+          e.preventDefault();
+          el.scrollLeft += e.deltaY;
+        },
+        { passive: false },
+      );
+    });
 </script>
