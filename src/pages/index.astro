@@ -3,8 +3,6 @@ import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
 import Hero from "../components/Hero.astro";
 import CategoryTabs from "../components/CategoryTabs.astro";
-import ProductCard from "../components/ProductCard.astro";
-import { products } from "../data/products.js";
 ---
 
 <Layout title="After Life — Pizzas, Hamburguesas y Lasañas Caseras">
@@ -12,11 +10,11 @@ import { products } from "../data/products.js";
   <Hero />
 
   <div id="menu">
-    <CategoryTabs active="Pizzas" />
+    <CategoryTabs />
   </div>
 
-  <section class="grid" id="contacto">
-    {products.map((p) => <ProductCard {...p} />)}
+  <section class="grid" id="contacto" data-products aria-busy="true">
+    <p class="loading-msg" data-loading>Cargando menú…</p>
   </section>
 
   <footer class="footer">
@@ -52,4 +50,391 @@ import { products } from "../data/products.js";
     font-size: 13px;
     padding: 24px 24px 40px;
   }
+
+  /* ---------- Estados (cargando / vacío / error) ---------- */
+  .loading-msg,
+  .empty-msg,
+  .error-msg {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: 28px 16px;
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 14px;
+  }
+
+  .error-msg {
+    color: #c0392b;
+    background: #fdecea;
+    border-radius: var(--radius-card);
+  }
+
+  /* ---------- Card ---------- (mismo estilo que ProductCard.astro, lo
+     duplicamos aquí porque el render es cliente y no podemos usar el
+     componente .astro para pintar cada card; los estilos deben vivir
+     junto al markup que los usa). */
+  .grid :global(.card) {
+    display: flex;
+    align-items: flex-end;
+    gap: clamp(14px, 2vw, 20px);
+    background: var(--color-surface-soft);
+    border-radius: var(--radius-card);
+    padding: 16px;
+    box-shadow: var(--shadow-card);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  @media (min-width: 640px) {
+    .grid :global(.card) {
+      padding: 18px;
+    }
+  }
+
+  .grid :global(.card:hover) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  }
+
+  .grid :global(.thumb) {
+    flex: 0 0 auto;
+    width: 96px;
+    height: 116px;
+    border-radius: var(--radius-thumb);
+    overflow: hidden;
+    background: #d8d8d8;
+  }
+
+  @media (min-width: 640px) {
+    .grid :global(.thumb) {
+      width: 108px;
+      height: 130px;
+    }
+  }
+
+  .grid :global(.thumb img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .grid :global(.thumb-fallback) {
+    width: 100%;
+    height: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #d8d8d8;
+    color: var(--color-text-muted);
+    font-size: 36px;
+    font-weight: 700;
+    user-select: none;
+  }
+
+  .grid :global(.body) {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 116px;
+  }
+
+  @media (min-width: 640px) {
+    .grid :global(.body) {
+      min-height: 130px;
+    }
+  }
+
+  .grid :global(.name) {
+    margin: 2px 0 6px;
+    font-size: clamp(17px, 1.6vw, 20px);
+    font-weight: 700;
+    color: var(--color-text);
+    line-height: 1.2;
+  }
+
+  .grid :global(.desc) {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 13px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  @media (min-width: 640px) {
+    .grid :global(.desc) {
+      font-size: 14px;
+    }
+  }
+
+  .grid :global(.row) {
+    margin-top: auto;
+    padding-top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .grid :global(.price) {
+    color: var(--color-brand);
+    font-weight: 700;
+    font-size: clamp(18px, 1.6vw, 20px);
+  }
+
+  .grid :global(.cur) {
+    font-weight: 400;
+    font-size: clamp(14px, 1.3vw, 16px);
+  }
+
+  .grid :global(.stepper) {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .grid :global(.stepper .btn) {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: var(--color-brand);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s ease;
+    cursor: pointer;
+    padding: 0;
+    /* Mata el delay de 300ms que mete el navegador para detectar doble-tap
+       sobre controles UI. Sin esto, en móvil el primer tap "no responde"
+       durante un instante y luego sí. */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .grid :global(.stepper .btn:active) {
+    transform: scale(0.94);
+  }
+
+  .grid :global(.stepper .btn.minus) {
+    background: #d6d6d6;
+  }
+
+  .grid :global(.stepper .btn:hover) {
+    background: var(--color-brand-dark);
+  }
+
+  .grid :global(.stepper .btn.minus:hover) {
+    background: #b8b8b8;
+  }
+
+  .grid :global(.qty) {
+    min-width: 16px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 16px;
+  }
 </style>
+
+<script>
+  // Import dentro del <script> (no en el frontmatter) para que Astro lo emita
+  // en el bundle. Mismo patrón que usa el admin en src/pages/admin/index.astro.
+  import { supabase } from "../lib/supabase";
+
+  // Helper idéntico al del admin: devuelve T (no T | null) tras el throw,
+  // así los closures mantienen el tipo narrow aunque TS no propague el
+  // narrowing dentro de la IIFE async.
+  function requireEl<T>(value: T | null, message: string): T {
+    if (value === null) throw new Error(message);
+    return value;
+  }
+
+  // ---------- Referencias al DOM ----------
+  const tabsEl = requireEl(
+    document.querySelector<HTMLElement>("[data-tabs]"),
+    "Falta el contenedor de tabs.",
+  );
+  const gridEl = requireEl(
+    document.querySelector<HTMLElement>("[data-products]"),
+    "Falta el contenedor de productos.",
+  );
+
+    // ---------- Estado ----------
+    type Category = { id: string; name: string };
+    type Product = {
+      id: string;
+      name: string;
+      description: string | null;
+      price: number;
+      image_url: string | null;
+      category_id: string;
+    };
+    let categories: Category[] = [];
+    let products: Product[] = [];
+    let activeCategoryId: string | null = null;
+
+    // ---------- Helpers ----------
+    // Escapa caracteres que romperían un innerHTML. description puede traer
+    // comillas, acentos o caracteres de control; nunca confiamos en el input.
+    function escapeHtml(value: string): string {
+      return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function setLoading(): void {
+      gridEl.setAttribute("aria-busy", "true");
+      gridEl.innerHTML = '<p class="loading-msg">Cargando menú…</p>';
+    }
+
+    function setError(): void {
+      gridEl.removeAttribute("aria-busy");
+      gridEl.innerHTML =
+        '<p class="error-msg" role="alert">No pudimos cargar el menú. Intenta recargar la página.</p>';
+    }
+
+    function setEmpty(): void {
+      gridEl.removeAttribute("aria-busy");
+      gridEl.innerHTML = '<p class="empty-msg">No hay productos en esta categoría.</p>';
+    }
+
+    // Iconos del stepper reutilizables para no duplicar SVG en cada card.
+    const ICON_MINUS =
+      '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">' +
+      '<path d="M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>' +
+      "</svg>";
+    const ICON_PLUS =
+      '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">' +
+      '<path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>' +
+      "</svg>";
+
+    function buildCardHtml(p: Product): string {
+      const initial = escapeHtml((p.name[0] ?? "?").toUpperCase());
+      const name = escapeHtml(p.name);
+      const desc = escapeHtml(p.description ?? "");
+      const thumb = p.image_url
+        ? `<img src="${escapeHtml(p.image_url)}" alt="${name}" loading="lazy" />`
+        : `<span class="thumb-fallback" aria-hidden="true">${initial}</span>`;
+      return (
+        `<article class="card" data-id="${escapeHtml(p.id)}">` +
+        `<div class="thumb">${thumb}</div>` +
+        `<div class="body">` +
+        `<h3 class="name">${name}</h3>` +
+        `<p class="desc">${desc}</p>` +
+        `<div class="row">` +
+        `<span class="price">${p.price} <span class="cur">cup</span></span>` +
+        `<div class="stepper" data-stepper>` +
+        `<button type="button" class="btn minus" aria-label="Disminuir cantidad" data-action="dec">${ICON_MINUS}</button>` +
+        `<span class="qty" data-qty>0</span>` +
+        `<button type="button" class="btn plus" aria-label="Aumentar cantidad" data-action="inc">${ICON_PLUS}</button>` +
+        `</div>` +
+        `</div>` +
+        `</div>` +
+        `</article>`
+      );
+    }
+
+    // Stepper: delegación en gridEl para registrar UN solo listener aunque se
+    // re-rendericen las cards al cambiar de categoría.
+    //
+    // Usamos `pointerdown` en vez de `click` para que la respuesta sea
+    // instantánea al pulsar, sin esperar a que el usuario levante el dedo
+    // ni a que el navegador termine la detección de doble-tap. Filtramos
+    // por botón primario para no capturar clicks derechos, y por pointerType
+    // mouse/touch/pen (excluye los casos raros de hover-only).
+    gridEl.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const btn = target.closest<HTMLButtonElement>("[data-action]");
+      if (!btn) return;
+      const stepper = btn.closest<HTMLElement>("[data-stepper]");
+      if (!stepper) return;
+      const qty = stepper.querySelector<HTMLElement>("[data-qty]");
+      if (!qty) return;
+
+      let n = parseInt(qty.textContent ?? "0", 10) || 0;
+      const action = btn.dataset.action;
+      if (action === "inc") n += 1;
+      else if (action === "dec") n = Math.max(0, n - 1);
+      qty.textContent = String(n);
+    });
+
+    function renderTabs(): void {
+      tabsEl.innerHTML = "";
+      for (const cat of categories) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.role = "tab";
+        btn.className = "tab";
+        btn.dataset.catId = cat.id;
+        btn.textContent = cat.name;
+        const isActive = cat.id === activeCategoryId;
+        btn.classList.toggle("active", isActive);
+        btn.setAttribute("aria-selected", String(isActive));
+        btn.addEventListener("click", () => {
+          if (activeCategoryId === cat.id) return;
+          activeCategoryId = cat.id;
+          renderTabs();
+          renderGrid();
+        });
+        tabsEl.appendChild(btn);
+      }
+    }
+
+    function renderGrid(): void {
+      if (activeCategoryId === null) {
+        setEmpty();
+        return;
+      }
+      const filtered = products.filter((p) => p.category_id === activeCategoryId);
+      if (filtered.length === 0) {
+        setEmpty();
+        return;
+      }
+      gridEl.removeAttribute("aria-busy");
+      gridEl.innerHTML = filtered.map(buildCardHtml).join("");
+    }
+
+    // ---------- Hilo principal ----------
+    setLoading();
+
+    const [categoriesResult, productsResult] = await Promise.all([
+      supabase
+        .from("categories")
+        .select("id, name")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true }),
+      supabase
+        .from("products")
+        .select("id, name, description, price, image_url, category_id")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true }),
+    ]);
+
+    if (categoriesResult.error) {
+      console.warn("categories fetch failed", categoriesResult.error);
+    }
+    const hasError =
+      productsResult.error ||
+      !productsResult.data ||
+      categoriesResult.error ||
+      !categoriesResult.data;
+    if (hasError) {
+      setError();
+    } else {
+      categories = categoriesResult.data as Category[];
+      products = (productsResult.data as Product[]) ?? [];
+      activeCategoryId = categories[0]?.id ?? null;
+
+      renderTabs();
+      renderGrid();
+    }
+</script>

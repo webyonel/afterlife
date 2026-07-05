@@ -1,28 +1,12 @@
 ---
-import { categories } from "../data/products.js";
-
-interface Props {
-  active?: string;
-}
-
-const { active = "Pizzas" } = Astro.props;
+// Shell vacío: las tabs las inyecta el script de la página que lo usa
+// (categorías reales vienen de Supabase). El data-tabs es el hook para el
+// render dinámico; el data-h-scroll mantiene el comportamiento de scroll
+// horizontal con la rueda del ratón.
 ---
 
 <div class="tabs-wrap">
-  <div class="tabs" role="tablist" data-h-scroll>
-    {
-      categories.map((cat) => (
-        <button
-          type="button"
-          role="tab"
-          aria-selected={cat === active}
-          class:list={["tab", { active: cat === active }]}
-        >
-          {cat}
-        </button>
-      ))
-    }
-  </div>
+  <div class="tabs" role="tablist" data-h-scroll data-tabs></div>
 </div>
 
 <style>
@@ -52,7 +36,11 @@ const { active = "Pizzas" } = Astro.props;
     display: none;
   }
 
-  .tab {
+  /* Los botones .tab se inyectan desde el script del consumidor (index.astro),
+     sin el scope-id de este componente. Usamos :global(.tab) para que las
+     reglas apliquen a cualquier descendiente de .tabs, tengan o no el
+     data-astro-cid-XXX. */
+  .tabs :global(.tab) {
     border: none;
     background: transparent;
     color: var(--color-text-muted);
@@ -67,16 +55,16 @@ const { active = "Pizzas" } = Astro.props;
   }
 
   @media (min-width: 768px) {
-    .tab {
+    .tabs :global(.tab) {
       padding: 10px 22px;
     }
   }
 
-  .tab:hover {
+  .tabs :global(.tab:hover) {
     color: var(--color-text);
   }
 
-  .tab.active {
+  .tabs :global(.tab.active) {
     background: var(--color-brand);
     color: #fff;
   }

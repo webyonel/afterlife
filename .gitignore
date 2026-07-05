@@ -23,3 +23,5 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 CONVENTIONAL_COMMITS.md
+public/menu/menu1.jpg
+public/menu/menu2.jpg

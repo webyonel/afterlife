@@ -78,8 +78,12 @@ import Navbar from "../../components/Navbar.astro";
     >
       <header class="modal-head">
         <div>
-          <span class="eyebrow">Catálogo</span>
-          <h2 id="new-product-title" class="modal-title">Nuevo producto</h2>
+          <span class="eyebrow" data-modal-eyebrow>Catálogo</span>
+          <h2
+            id="new-product-title"
+            class="modal-title"
+            data-modal-title
+          >Nuevo producto</h2>
         </div>
         <button
           type="button"
@@ -172,6 +176,54 @@ import Navbar from "../../components/Navbar.astro";
           </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal: Confirmar eliminación. Reaprovecha el mismo patrón de backdrop
+       que el modal "Nuevo producto" (la capa cierra solo si se hace click
+       sobre ella misma). -->
+  <div class="modal-backdrop" data-confirm-modal hidden>
+    <div
+      class="modal-card modal-card--narrow"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="confirm-delete-title"
+      aria-describedby="confirm-delete-body"
+    >
+      <header class="modal-head">
+        <div>
+          <span class="eyebrow">Catálogo</span>
+          <h2
+            id="confirm-delete-title"
+            class="modal-title"
+          >Eliminar producto</h2>
+        </div>
+        <button
+          type="button"
+          class="modal-close"
+          aria-label="Cerrar"
+          data-confirm-close
+        >×</button>
+      </header>
+
+      <div class="confirm-body">
+        <div class="confirm-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        </div>
+        <p id="confirm-delete-body" class="confirm-text">
+          ¿Seguro que quieres eliminar <strong data-confirm-name>este producto</strong>?
+          Esta acción no se puede deshacer.
+        </p>
+      </div>
+
+      <div class="confirm-actions">
+        <button type="button" class="btn-secondary" data-confirm-close>
+          Cancelar
+        </button>
+        <button type="button" class="btn-danger" data-confirm-submit>
+          <span data-confirm-submit-text>Eliminar</span>
+        </button>
+      </div>
     </div>
   </div>
 </Layout>
@@ -889,6 +941,82 @@ import Navbar from "../../components/Navbar.astro";
     transform: none;
   }
 
+  /* ---------- Modal "Confirmar eliminación" ---------- */
+  .modal-card--narrow {
+    max-width: 420px;
+  }
+
+  .confirm-body {
+    padding: 12px 24px 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .confirm-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #fdecea;
+    color: #c0392b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .confirm-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .confirm-text {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--color-text);
+  }
+
+  .confirm-text strong {
+    color: var(--color-text);
+    font-weight: 600;
+  }
+
+  .confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 16px 24px 24px;
+  }
+
+  .btn-danger {
+    border-radius: var(--radius-pill);
+    padding: 11px 22px;
+    background: #c0392b;
+    color: #fff;
+    border: none;
+    font-weight: 600;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease, opacity 0.2s ease;
+  }
+
+  .btn-danger:hover {
+    background: #a32d22;
+  }
+
+  .btn-danger:active {
+    transform: scale(0.98);
+  }
+
+  .btn-danger:disabled,
+  .btn-secondary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
   .visually-hidden {
     position: absolute;
     width: 1px;
@@ -1024,6 +1152,7 @@ import Navbar from "../../components/Navbar.astro";
   function buildProductRow(product: {
     id: string;
     name: string;
+    description: string;
     image_url: string | null;
     price: number;
     is_active: boolean;
@@ -1136,7 +1265,7 @@ import Navbar from "../../components/Navbar.astro";
     editBtn.dataset.productId = product.id;
     editBtn.innerHTML =
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
-    editBtn.addEventListener("click", () => showComingSoon("Editar"));
+    editBtn.addEventListener("click", () => openEditModal(product));
     actionsCell.appendChild(editBtn);
 
     const deleteBtn = document.createElement("button");
@@ -1147,7 +1276,7 @@ import Navbar from "../../components/Navbar.astro";
     deleteBtn.dataset.productId = product.id;
     deleteBtn.innerHTML =
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>';
-    deleteBtn.addEventListener("click", () => showComingSoon("Eliminar"));
+    deleteBtn.addEventListener("click", () => openDeleteModal(product));
     actionsCell.appendChild(deleteBtn);
 
     row.appendChild(actionsCell);
@@ -1158,6 +1287,7 @@ import Navbar from "../../components/Navbar.astro";
     products: Array<{
       id: string;
       name: string;
+      description: string;
       image_url: string | null;
       price: number;
       is_active: boolean;
@@ -1201,7 +1331,7 @@ import Navbar from "../../components/Navbar.astro";
       supabase
         .from("products")
         .select(
-          "id, name, image_url, price, is_active, category_id, categories(name)",
+          "id, name, description, image_url, price, is_active, category_id, categories(name)",
         )
         .order("display_order", { ascending: true }),
     ]);
@@ -1230,6 +1360,7 @@ import Navbar from "../../components/Navbar.astro";
       return {
         id: p.id,
         name: p.name,
+        description: p.description ?? "",
         image_url: p.image_url,
         price: p.price,
         is_active: p.is_active,
@@ -1237,6 +1368,7 @@ import Navbar from "../../components/Navbar.astro";
         category_name: categoryName,
       };
     });
+    productsCache = products;
 
     renderFilters(categories);
     renderProducts(products);
@@ -1307,8 +1439,27 @@ import Navbar from "../../components/Navbar.astro";
     submitBtn.querySelector<HTMLElement>("[data-submit-text]"),
     "Falta el texto del submit",
   );
+  const modalTitle = requireEl(
+    modalBackdrop.querySelector<HTMLElement>("[data-modal-title]"),
+    "Falta el título del modal",
+  );
 
+  // ---------- Estado ----------
   let categoriesCache: Array<{ id: string; name: string }> = [];
+  let productsCache: Array<{
+    id: string;
+    name: string;
+    description: string;
+    image_url: string | null;
+    price: number;
+    is_active: boolean;
+    category_id: string;
+    category_name: string | null;
+  }> = [];
+  // null = crear; string = id del producto que se está editando
+  let editingId: string | null = null;
+  const ORIGINAL_SUBMIT_TEXT_CREATE = "Crear producto";
+  const ORIGINAL_SUBMIT_TEXT_EDIT = "Guardar cambios";
 
   function setSubmitting(isSubmitting: boolean): void {
     submitBtn.disabled = isSubmitting;
@@ -1319,7 +1470,13 @@ import Navbar from "../../components/Navbar.astro";
       .forEach((el) => {
         if (el !== submitBtn) (el as HTMLInputElement | HTMLButtonElement).disabled = isSubmitting;
       });
-    submitText.textContent = isSubmitting ? "Creando…" : "Crear producto";
+    if (isSubmitting) {
+      submitText.textContent = editingId ? "Guardando…" : "Creando…";
+    } else {
+      submitText.textContent = editingId
+        ? ORIGINAL_SUBMIT_TEXT_EDIT
+        : ORIGINAL_SUBMIT_TEXT_CREATE;
+    }
   }
 
   function showFormError(message: string): void {
@@ -1358,6 +1515,40 @@ import Navbar from "../../components/Navbar.astro";
       URL.revokeObjectURL(imagePreviewImg.src);
     }
     imagePreviewImg.removeAttribute("src");
+    imagePreviewImg.removeAttribute("alt");
+    clearFormError();
+  }
+
+  // Rellena los campos con los datos de un producto existente. La imagen se
+  // muestra directamente desde image_url (no se sube nada nuevo hasta submit).
+  function prefillEditForm(product: {
+    id: string;
+    name: string;
+    description: string;
+    image_url: string | null;
+    price: number;
+    category_id: string;
+  }): void {
+    modalName.value = product.name;
+    modalCategory.value = product.category_id;
+    modalPrice.value = String(product.price);
+    modalDescription.value = product.description ?? "";
+    modalFileInput.value = "";
+
+    if (product.image_url) {
+      imagePreviewImg.src = product.image_url;
+      imagePreviewImg.alt = `Imagen actual de ${product.name}`;
+      imagePreview.hidden = false;
+      filePickerText.textContent = "Cambiar imagen…";
+    } else {
+      imagePreview.hidden = true;
+      if (imagePreviewImg.src.startsWith("blob:")) {
+        URL.revokeObjectURL(imagePreviewImg.src);
+      }
+      imagePreviewImg.removeAttribute("src");
+      imagePreviewImg.removeAttribute("alt");
+      filePickerText.textContent = "Elegir imagen…";
+    }
     clearFormError();
   }
 
@@ -1383,6 +1574,9 @@ import Navbar from "../../components/Navbar.astro";
       showToast("Cargando categorías, intenta en un momento…");
       return;
     }
+    editingId = null;
+    modalTitle.textContent = "Nuevo producto";
+    submitText.textContent = ORIGINAL_SUBMIT_TEXT_CREATE;
     fillCategoryOptions();
     resetModal();
     modalBackdrop.hidden = false;
@@ -1392,12 +1586,35 @@ import Navbar from "../../components/Navbar.astro";
     window.setTimeout(() => modalName.focus(), 50);
   }
 
+  function openEditModal(product: {
+    id: string;
+    name: string;
+    description: string;
+    image_url: string | null;
+    price: number;
+    category_id: string;
+  }): void {
+    if (categoriesCache.length === 0) {
+      showToast("Cargando categorías, intenta en un momento…");
+      return;
+    }
+    editingId = product.id;
+    modalTitle.textContent = "Editar producto";
+    submitText.textContent = ORIGINAL_SUBMIT_TEXT_EDIT;
+    fillCategoryOptions();
+    prefillEditForm(product);
+    modalBackdrop.hidden = false;
+    document.body.style.overflow = "hidden";
+    window.setTimeout(() => modalName.focus(), 50);
+  }
+
   function closeModal(): void {
     modalBackdrop.hidden = true;
     document.body.style.overflow = "";
     if (imagePreviewImg.src.startsWith("blob:")) {
       URL.revokeObjectURL(imagePreviewImg.src);
     }
+    editingId = null;
   }
 
   function refreshTable(): void {
@@ -1412,7 +1629,7 @@ import Navbar from "../../components/Navbar.astro";
         supabase
           .from("products")
           .select(
-            "id, name, image_url, price, is_active, category_id, categories(name)",
+            "id, name, description, image_url, price, is_active, category_id, categories(name)",
           )
           .order("display_order", { ascending: true }),
       ]);
@@ -1435,6 +1652,7 @@ import Navbar from "../../components/Navbar.astro";
         return {
           id: p.id,
           name: p.name,
+          description: p.description ?? "",
           image_url: p.image_url,
           price: p.price,
           is_active: p.is_active,
@@ -1442,6 +1660,7 @@ import Navbar from "../../components/Navbar.astro";
           category_name: categoryName,
         };
       });
+      productsCache = products;
 
       renderFilters(categoriesCache);
       renderProducts(products);
@@ -1509,6 +1728,24 @@ import Navbar from "../../components/Navbar.astro";
   });
 
   // --- Submit del formulario ---
+  async function uploadImage(file: File): Promise<string | null> {
+    const safeExt = (file.name.match(/\.[a-z0-9]+$/i)?.[0] ?? ".png").toLowerCase();
+    const random = crypto.randomUUID().split("-")[0];
+    const path = `products/${Date.now()}-${random}${safeExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("products")
+      .upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type,
+      });
+
+    if (uploadError) return null;
+    const { data: pub } = supabase.storage.from("products").getPublicUrl(path);
+    return pub.publicUrl;
+  }
+
   modalForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     clearFormError();
@@ -1527,52 +1764,71 @@ import Navbar from "../../components/Navbar.astro";
 
     setSubmitting(true);
 
-    // 1) Subir imagen si hay
-    let imageUrl: string | null = null;
+    // Determinar imageUrl final:
+    //  - Editando: partimos del image_url existente (si lo hay), se reemplaza solo
+    //    si se sube un archivo nuevo, y se vacía si el usuario quitó el preview.
+    //  - Creando: null hasta que haya archivo.
+    let imageUrl: string | null = editingId
+      ? (productsCache.find((p) => p.id === editingId)?.image_url ?? null)
+      : null;
+    if (imagePreview.hidden) imageUrl = null;
+
     if (file) {
-      const safeExt = (file.name.match(/\.[a-z0-9]+$/i)?.[0] ?? ".png").toLowerCase();
-      const random = crypto.randomUUID().split("-")[0];
-      const path = `products/${Date.now()}-${random}${safeExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("products")
-        .upload(path, file, {
-          cacheControl: "3600",
-          upsert: false,
-          contentType: file.type,
-        });
-
-      if (uploadError) {
+      const uploaded = await uploadImage(file);
+      if (!uploaded) {
         setSubmitting(false);
-        showFormError(`No se pudo subir la imagen: ${uploadError.message}`);
+        showFormError("No se pudo subir la imagen. Intenta con otra.");
+        return;
+      }
+      imageUrl = uploaded;
+    }
+
+    if (editingId) {
+      // Update del producto existente
+      const { error: updateError } = await supabase
+        .from("products")
+        .update({
+          name,
+          description,
+          price,
+          category_id: categoryId,
+          image_url: imageUrl,
+        })
+        .eq("id", editingId);
+
+      setSubmitting(false);
+
+      if (updateError) {
+        showFormError(`No se pudo actualizar: ${updateError.message}`);
         return;
       }
 
-      const { data: pub } = supabase.storage.from("products").getPublicUrl(path);
-      imageUrl = pub.publicUrl;
+      showToast(`"${name}" actualizado.`);
+      closeModal();
+      refreshTable();
+    } else {
+      // Insert nuevo producto
+      const { error: insertError } = await supabase.from("products").insert({
+        name,
+        description,
+        price,
+        category_id: categoryId,
+        image_url: imageUrl,
+        is_active: true,
+        display_order: 0,
+      });
+
+      setSubmitting(false);
+
+      if (insertError) {
+        showFormError(`No se pudo crear el producto: ${insertError.message}`);
+        return;
+      }
+
+      showToast(`"${name}" creado correctamente.`);
+      closeModal();
+      refreshTable();
     }
-
-    // 2) Insertar producto
-    const { error: insertError } = await supabase.from("products").insert({
-      name,
-      description,
-      price,
-      category_id: categoryId,
-      image_url: imageUrl,
-      is_active: true,
-      display_order: 0,
-    });
-
-    setSubmitting(false);
-
-    if (insertError) {
-      showFormError(`No se pudo crear el producto: ${insertError.message}`);
-      return;
-    }
-
-    showToast(`"${name}" creado correctamente.`);
-    closeModal();
-    refreshTable();
   });
 
   // 4) Misma rueda-vertical → scroll-horizontal que CategoryTabs del sitio público.
@@ -1601,4 +1857,125 @@ import Navbar from "../../components/Navbar.astro";
         { passive: false },
       );
     });
+
+  // 5) Modal "Confirmar eliminación" — refs y estado
+  const confirmModal = requireEl(
+    document.querySelector<HTMLElement>("[data-confirm-modal]"),
+    "Falta el modal de confirmación",
+  );
+  const confirmName = requireEl(
+    confirmModal.querySelector<HTMLElement>("[data-confirm-name]"),
+    "Falta el nombre en el modal de confirmación",
+  );
+  const confirmSubmitBtn = requireEl(
+    confirmModal.querySelector<HTMLButtonElement>("[data-confirm-submit]"),
+    "Falta el botón de confirmar eliminación",
+  );
+  const confirmSubmitText = requireEl(
+    confirmSubmitBtn.querySelector<HTMLElement>("[data-confirm-submit-text]"),
+    "Falta el texto del botón de confirmar",
+  );
+
+  // Producto pendiente de eliminar (se guarda al abrir el modal y se limpia al cerrar)
+  let pendingDelete: {
+    id: string;
+    name: string;
+    image_url: string | null;
+  } | null = null;
+
+  function openDeleteModal(product: {
+    id: string;
+    name: string;
+    image_url: string | null;
+  }): void {
+    pendingDelete = {
+      id: product.id,
+      name: product.name,
+      image_url: product.image_url,
+    };
+    confirmName.textContent = `"${product.name}"`;
+    confirmSubmitText.textContent = "Eliminar";
+    confirmSubmitBtn.disabled = false;
+    confirmModal.hidden = false;
+    document.body.style.overflow = "hidden";
+    // Foco en el botón "Eliminar" para que Enter confirme, pero hay un Cancelar
+    // antes — el usuario puede tabular hacia atrás.
+    window.setTimeout(() => confirmSubmitBtn.focus(), 50);
+  }
+
+  function closeDeleteModal(): void {
+    if (confirmModal.hidden) return;
+    confirmModal.hidden = true;
+    document.body.style.overflow = "";
+    pendingDelete = null;
+  }
+
+  // Convierte una image_url pública del bucket "products" en el path interno
+  // que storage.remove necesita. Devuelve null si la URL no parece apuntar al
+  // bucket o si el producto no tenía imagen — en ambos casos no hay nada que
+  // borrar y la operación de DB sigue siendo válida.
+  function imagePathFromUrl(imageUrl: string | null): string | null {
+    if (!imageUrl) return null;
+    const marker = "/storage/v1/object/public/products/";
+    const idx = imageUrl.indexOf(marker);
+    if (idx === -1) return null;
+    const path = imageUrl.slice(idx + marker.length);
+    // Quita cualquier query string o fragment
+    return path.split("?")[0]!.split("#")[0]!;
+  }
+
+  async function confirmDelete(): Promise<void> {
+    const target = pendingDelete;
+    if (!target) return;
+
+    confirmSubmitBtn.disabled = true;
+    confirmSubmitText.textContent = "Eliminando…";
+
+    const { error } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", target.id);
+
+    if (error) {
+      confirmSubmitBtn.disabled = false;
+      confirmSubmitText.textContent = "Eliminar";
+      showToast(`No se pudo eliminar: ${error.message}`);
+      console.warn("products delete failed", error);
+      return;
+    }
+
+    // Limpieza best-effort de la imagen en storage. Si falla, no revertimos
+    // el delete de DB — el archivo huérfano no rompe nada y se puede limpiar
+    // desde el dashboard del bucket.
+    const imagePath = imagePathFromUrl(target.image_url);
+    if (imagePath) {
+      const { error: removeError } = await supabase.storage
+        .from("products")
+        .remove([imagePath]);
+      if (removeError) {
+        console.warn("storage remove failed", removeError);
+      }
+    }
+
+    closeDeleteModal();
+    showToast(`"${target.name}" eliminado.`);
+    refreshTable();
+  }
+
+  // Abrir / cerrar el modal de confirmación
+  confirmModal.addEventListener("click", (event) => {
+    if (event.target === confirmModal) closeDeleteModal();
+  });
+  confirmModal
+    .querySelectorAll<HTMLButtonElement>("[data-confirm-close]")
+    .forEach((btn) => btn.addEventListener("click", closeDeleteModal));
+  confirmSubmitBtn.addEventListener("click", () => void confirmDelete());
+
+  // Escape: si el modal de confirmación está abierto, ciérralo; si no, deja
+  // que el listener del modal de producto haga su trabajo.
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !confirmModal.hidden) {
+      closeDeleteModal();
+    }
+  });
 </script>
