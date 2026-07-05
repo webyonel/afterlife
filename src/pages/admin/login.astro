@@ -46,7 +46,6 @@ import Navbar from "../../components/Navbar.astro";
           Iniciar sesión
         </button>
       </form>
-
       <footer class="foot">
         <a href="/" class="back">← Volver al sitio</a>
       </footer>
@@ -240,42 +239,121 @@ import Navbar from "../../components/Navbar.astro";
 </style>
 
 <script>
+  import { supabase } from "../../lib/supabase";
+
+  // ---------- Referencias al DOM ----------
   const form = document.querySelector<HTMLFormElement>(".form");
-  const submit = document.querySelector<HTMLButtonElement>("[data-login-submit]");
-  const errorEl = document.querySelector<HTMLElement>("[data-login-error]");
+  if (!form) throw new Error("No se encontró el formulario");
 
-  if (form && submit && errorEl) {
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      errorEl.hidden = true;
+  const emailInput = form.querySelector<HTMLInputElement>("[data-login-email]");
+  const passwordInput = form.querySelector<HTMLInputElement>("[data-login-password]");
+  const submitButton = form.querySelector<HTMLButtonElement>("[data-login-submit]");
 
-      const emailInput = form.querySelector<HTMLInputElement>("[data-login-email]");
-      const passwordInput = form.querySelector<HTMLInputElement>(
-        "[data-login-password]",
-      );
-
-      const email = emailInput?.value.trim() ?? "";
-      const password = passwordInput?.value ?? "";
-
-      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-      const passwordOk = password.length >= 6;
-
-      if (!emailOk || !passwordOk) {
-        errorEl.hidden = false;
-        return;
-      }
-
-      // Placeholder: aquí se haría la llamada al backend.
-      // De momento mostramos feedback y redirigimos a la home para no romper UX.
-      submit.disabled = true;
-      submit.textContent = "Verificando...";
-
-      setTimeout(() => {
-        submit.disabled = false;
-        submit.textContent = "Iniciar sesión";
-        // TODO: redirigir a /admin cuando exista el dashboard real.
-        window.location.href = "/";
-      }, 900);
-    });
+  if (!emailInput || !passwordInput || !submitButton) {
+    throw new Error("Faltan campos obligatorios del formulario");
   }
+
+  // ---------- Constantes ----------
+  const MIN_PASSWORD_LENGTH = 6;
+  // Regex estilo HTML5 — suficiente para detectar entradas mal formadas sin reinventar la rueda
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const ORIGINAL_BUTTON_TEXT = (submitButton.textContent ?? "Iniciar sesión").trim();
+
+  // ---------- Banner de error (reusa la clase .error ya estilada arriba) ----------
+  const errorBanner = document.createElement("p");
+  errorBanner.className = "error";
+  errorBanner.setAttribute("role", "alert");
+  errorBanner.hidden = true;
+  form.insertBefore(errorBanner, form.firstChild);
+
+  function clearError(): void {
+    errorBanner.hidden = true;
+    errorBanner.textContent = "";
+    emailInput.removeAttribute("aria-invalid");
+    passwordInput.removeAttribute("aria-invalid");
+  }
+
+  function showError(message: string): void {
+    errorBanner.textContent = message;
+    errorBanner.hidden = false;
+  }
+
+  // ---------- Validación ----------
+  function validate(): { email: string; password: string } | null {
+    const email = emailInput.value.trim().toLowerCase();
+    const password = passwordInput.value;
+
+    if (!email) {
+      showError("Ingresa tu correo electrónico.");
+      emailInput.setAttribute("aria-invalid", "true");
+      emailInput.focus();
+      return null;
+    }
+    if (!EMAIL_RE.test(email)) {
+      showError("El correo no tiene un formato válido.");
+      emailInput.setAttribute("aria-invalid", "true");
+      emailInput.focus();
+      return null;
+    }
+    if (!password) {
+      showError("Ingresa tu contraseña.");
+      passwordInput.setAttribute("aria-invalid", "true");
+      passwordInput.focus();
+      return null;
+    }
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      showError(`La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres.`);
+      passwordInput.setAttribute("aria-invalid", "true");
+      passwordInput.focus();
+      return null;
+    }
+
+    clearError();
+    return { email, password };
+  }
+
+  function setLoading(loading: boolean): void {
+    submitButton.disabled = loading;
+    submitButton.textContent = loading ? "Iniciando…" : ORIGINAL_BUTTON_TEXT;
+  }
+
+  // ---------- Limpiar errores al editar ----------
+  emailInput.addEventListener("input", clearError);
+  passwordInput.addEventListener("input", clearError);
+
+  // ---------- Submit ----------
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const validated = validate();
+    if (!validated) return;
+
+    setLoading(true);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: validated.email,
+      password: validated.password,
+    });
+
+    setLoading(false);
+
+    if (error) {
+      // Mensaje genérico: NO revelar si el email existe, si la cuenta está confirmada, etc.
+      showError("Credenciales inválidas.");
+      passwordInput.focus();
+      passwordInput.select();
+      return;
+    }
+
+    // replace() para que el botón "atrás" no devuelva al usuario al login con sesión activa
+    window.location.replace("/admin");
+  });
+
+  // ---------- Si ya hay sesión activa, saltar el login ----------
+  void (async () => {
+    const { data, error } = await supabase.auth.getSession();
+    if (!error && data.session) {
+      window.location.replace("/admin");
+    }
+  })();
 </script>

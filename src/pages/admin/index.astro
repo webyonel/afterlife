@@ -1,0 +1,179 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+
+// Placeholder del panel admin.
+//
+// TODO: este archivo es solo el destino del flujo de login. El panel real
+// (CRUD de productos/categorías, gestión de menú) se construirá después.
+// Como el proyecto es SSG (sin SSR/middleware), las páginas /admin/* deben
+// confiar en RLS del lado de Supabase para proteger datos reales — el guard
+// client-side de abajo sólo bloquea la UI visible.
+---
+
+<Layout title="Panel — After Life">
+  <Navbar />
+
+  <main class="panel">
+    <section class="card" aria-labelledby="panel-title">
+      <header class="head">
+        <span class="eyebrow">Panel de administración</span>
+        <h1 id="panel-title" class="title">Sesión iniciada</h1>
+        <p class="lead">
+          Bienvenido, <span data-panel-email>administrador</span>.
+        </p>
+      </header>
+
+      <p class="placeholder">
+        Pronto aquí podrás gestionar el menú, productos y categorías del sitio.
+      </p>
+
+      <button type="button" class="logout" data-panel-logout>
+        Cerrar sesión
+      </button>
+
+      <footer class="foot">
+        <a href="/" class="back">← Volver al sitio</a>
+      </footer>
+    </section>
+  </main>
+</Layout>
+
+<style>
+  .panel {
+    min-height: calc(100vh - 120px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px 80px;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 440px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    padding: clamp(28px, 4vw, 40px) clamp(24px, 4vw, 32px);
+    box-shadow: var(--shadow-nav);
+  }
+
+  .head {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .eyebrow {
+    display: inline-block;
+    color: var(--color-brand);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 0 0 10px;
+  }
+
+  .title {
+    font-size: clamp(24px, 3vw, 30px);
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 8px;
+    letter-spacing: -0.02em;
+  }
+
+  .lead {
+    color: var(--color-text-muted);
+    font-size: 14px;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .placeholder {
+    color: var(--color-text-muted);
+    font-size: 14px;
+    text-align: center;
+    line-height: 1.55;
+    margin: 0 0 24px;
+    padding: 16px;
+    background: var(--color-surface-soft);
+    border-radius: var(--radius-card);
+  }
+
+  .logout {
+    display: block;
+    width: 100%;
+    background: var(--color-surface);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    font-weight: 600;
+    font-size: 15px;
+    border-radius: var(--radius-pill);
+    padding: 14px 24px;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.1s ease, opacity 0.2s ease;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .logout:hover {
+    background: var(--color-surface-soft);
+    border-color: var(--color-text-muted);
+  }
+
+  .logout:active {
+    transform: scale(0.98);
+  }
+
+  .logout:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .foot {
+    margin-top: 24px;
+    text-align: center;
+  }
+
+  .back {
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    transition: color 0.2s ease;
+  }
+
+  .back:hover {
+    color: var(--color-text);
+  }
+</style>
+
+<script>
+  import { supabase } from "../../lib/supabase";
+
+  const emailEl = document.querySelector<HTMLSpanElement>("[data-panel-email]");
+  const logoutButton = document.querySelector<HTMLButtonElement>("[data-panel-logout]");
+
+  async function redirectToLogin(): Promise<void> {
+    window.location.replace("/admin/login");
+  }
+
+  void (async () => {
+    const { data, error } = await supabase.auth.getSession();
+
+    if (error || !data.session) {
+      redirectToLogin();
+      return;
+    }
+
+    const email = data.session.user.email ?? "administrador";
+    if (emailEl) emailEl.textContent = email;
+
+    if (logoutButton) {
+      logoutButton.addEventListener("click", async () => {
+        logoutButton.disabled = true;
+        logoutButton.textContent = "Cerrando sesión…";
+        await supabase.auth.signOut();
+        redirectToLogin();
+      });
+    }
+  })();
+</script>
