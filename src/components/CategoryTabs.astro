@@ -14,7 +14,9 @@
     width: 100%;
     max-width: var(--container-grid);
     margin: clamp(32px, 5vw, 44px) auto 0;
-    padding: 0 16px;
+    /* Padding lateral generoso para que la pastilla no quede pegada al
+       borde de la pantalla. */
+    padding: 0 32px;
   }
 
   .tabs {
@@ -23,7 +25,10 @@
     gap: 6px;
     background: var(--color-surface-soft);
     border-radius: var(--radius-pill);
-    padding: 6px;
+    /* Padding generoso para que el marco gris alrededor del tab activo
+       (especialmente por la izquierda) sea claramente visible y separe
+       visualmente el primer tab del fondo. */
+    padding: 12px;
     overflow-x: auto;
     overflow-y: hidden;
     scrollbar-width: none;
