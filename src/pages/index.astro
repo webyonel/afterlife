@@ -111,8 +111,12 @@ const websiteSchema = {
 </Layout>
 
 <style>
+  /* #menu necesita caja real para que el scrollIntoView del navbar funcione
+     correctamente (con display: contents algunos navegadores no calculan
+     la posición del ancla). El wrapper no añade estilos propios, así que
+     visualmente es transparente. */
   #menu {
-    display: contents;
+    scroll-margin-top: 24px;
   }
 
   .grid {

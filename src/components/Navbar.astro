@@ -1,10 +1,9 @@
 ---
-// Navbar estilo pill flotante. En escritorio muestra logo + links (Inicio, Menú, Contacto)
+// Navbar estilo pill flotante. En escritorio muestra logo + links (Inicio, Menú)
 // + botón de menú. En móvil solo logo + botón de menú; el botón abre un panel con los links.
 const links = [
-  { href: "#inicio", label: "Inicio" },
-  { href: "#menu", label: "Menú" },
-  { href: "#contacto", label: "Contacto" },
+  { href: "/", label: "Inicio" },
+  { href: "/#menu", label: "Menú" },
 ];
 ---
 
@@ -248,4 +247,34 @@ const links = [
       }
     });
   }
+
+  // Scroll a anclas del propio index. Cuando un link del navbar apunta a
+  // `/#menu` y ya estamos en `/`, evitamos el comportamiento default del
+  // navegador y hacemos scrollIntoView nosotros. Esto soluciona el caso
+  // donde el target tiene `display: contents` (sin caja propia) y los
+  // navegadores no calculan correctamente la posición de scroll.
+  document.querySelectorAll<HTMLAnchorElement>(".nav a[href*='#']").forEach((a) => {
+    a.addEventListener("click", (event) => {
+      const href = a.getAttribute("href") ?? "";
+      const hashIndex = href.indexOf("#");
+      if (hashIndex === -1) return;
+      const targetPath = href.slice(0, hashIndex) || "/";
+      const hash = href.slice(hashIndex + 1);
+      if (!hash) return;
+
+      // Si la ruta del link no es la actual, dejamos que el navegador navegue
+      // (recarga la página destino y hace su scroll al cargar).
+      const samePath =
+        window.location.pathname === targetPath ||
+        (targetPath === "/" && window.location.pathname === "/");
+      if (!samePath) return;
+
+      const target = document.getElementById(hash);
+      if (!target) return;
+
+      event.preventDefault();
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      history.pushState(null, "", `${targetPath}#${hash}`);
+    });
+  });
 </script>
