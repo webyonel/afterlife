@@ -15,5 +15,11 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.110.0",
     "astro": "^7.0.6"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp"
+    ]
   }
 }
