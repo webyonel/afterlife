@@ -365,14 +365,14 @@ import Navbar from "../../components/Navbar.astro";
     }
 
     // replace() para que el botón "atrás" no devuelva al usuario al login con sesión activa
-    window.location.replace("/admin");
+    window.location.replace(`${import.meta.env.BASE_URL}admin`);
   });
 
   // ---------- Si ya hay sesión activa, saltar el login ----------
   void (async () => {
     const { data, error } = await supabase.auth.getSession();
     if (!error && data.session) {
-      window.location.replace("/admin");
+      window.location.replace(`${import.meta.env.BASE_URL}admin`);
     }
   })();
 </script>

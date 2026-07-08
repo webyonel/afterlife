@@ -1321,7 +1321,7 @@ import Navbar from "../../components/Navbar.astro";
     // 1) Sesión: si no hay, redirigir al login
     const sessionResult = await supabase.auth.getSession();
     if (sessionResult.error || !sessionResult.data.session) {
-      window.location.replace("/admin/login");
+      window.location.replace(`${import.meta.env.BASE_URL}admin/login`);
       return;
     }
 
