@@ -1,39 +1,74 @@
 ---
 // Carrito flotante. Empieza oculto (`hidden`). El script de la home lo hace
 // visible al añadir el primer producto y lo actualiza en cada cambio de
-// cantidad. En desktop se ancla al fondo a la izquierda; en móvil se estira
-// a pantalla completa (con scroll interno si la lista crece).
+// cantidad.
+//
+// Layout por viewport:
+// - Desktop: panel flotante anclado a la esquina inferior derecha.
+// - Móvil: barra fina (~64px) anclada al fondo; al tocarla se abre el
+//   carrito completo como modal a pantalla completa. Esto evita que el
+//   carrito tape los productos de abajo mientras el usuario navega el menú.
 ---
 
 <aside class="cart" data-cart hidden aria-label="Tu pedido">
-  <header class="cart-head">
-    <div class="cart-head-text">
-      <span class="cart-eyebrow">Tu pedido</span>
-      <span class="cart-count" data-cart-count>0 productos</span>
-    </div>
-    <button
-      type="button"
-      class="cart-clear"
-      data-cart-clear
-      aria-label="Vaciar pedido"
-    >
-      <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 6h18"/>
-        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
-        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-        <path d="M10 11v6"/>
-        <path d="M14 11v6"/>
-      </svg>
-      <span>Vaciar</span>
-    </button>
-  </header>
+  {/* ---------- Móvil: barra compacta (lo que se ve por defecto) ---------- */}
+  <button
+    type="button"
+    class="cart-bar"
+    data-cart-bar
+    aria-expanded="false"
+    aria-controls="cart-modal"
+  >
+    <span class="cart-bar-count" data-cart-count>0 productos</span>
+    <span class="cart-bar-amount">
+      <span data-cart-total-amount>0 cup</span>
+      <span class="cart-bar-cta" aria-hidden="true">Ver pedido ›</span>
+    </span>
+  </button>
 
-  <ul class="cart-list" data-cart-list></ul>
+  {/* ---------- Móvil: modal expandido · Desktop: panel flotante ---------- */}
+  <div class="cart-modal" data-cart-modal>
+    <header class="cart-head">
+      <div class="cart-head-text">
+        <span class="cart-eyebrow">Tu pedido</span>
+        <span class="cart-count" data-cart-count>0 productos</span>
+      </div>
+      <button
+        type="button"
+        class="cart-clear"
+        data-cart-clear
+        aria-label="Vaciar pedido"
+      >
+        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 6h18"/>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+          <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          <path d="M10 11v6"/>
+          <path d="M14 11v6"/>
+        </svg>
+        <span>Vaciar</span>
+      </button>
+      {/* Móvil: botón para cerrar el modal */}
+      <button
+        type="button"
+        class="cart-close"
+        data-cart-close
+        aria-label="Cerrar pedido"
+      >
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6L6 18"/>
+          <path d="M6 6l12 12"/>
+        </svg>
+      </button>
+    </header>
 
-  <footer class="cart-foot">
-    <span class="cart-total-label">Total</span>
-    <span class="cart-total-amount" data-cart-total-amount>0 cup</span>
-  </footer>
+    <ul class="cart-list" data-cart-list></ul>
+
+    <footer class="cart-foot">
+      <span class="cart-total-label">Total</span>
+      <span class="cart-total-amount" data-cart-total-amount>0 cup</span>
+    </footer>
+  </div>
 </aside>
 
 <style>
@@ -44,16 +79,7 @@
     bottom: 16px;
     width: min(320px, calc(100vw - 32px));
     max-height: min(70vh, 480px);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-card);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.06);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
     z-index: 50;
-    /* Anima al aparecer/desaparecer con un sutil slide-up desde la esquina */
-    transform-origin: bottom right;
     animation: cartIn 0.22s ease-out;
   }
 
@@ -64,6 +90,87 @@
   @keyframes cartIn {
     from { opacity: 0; transform: translateY(8px) scale(0.97); }
     to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* ---------- Móvil: barra compacta (default) ---------- */
+  .cart-bar {
+    display: none; /* Se muestra solo en móvil vía media query */
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    padding: 12px 18px;
+    background: var(--color-brand);
+    color: #fff;
+    border: none;
+    border-top-left-radius: var(--radius-card);
+    border-top-right-radius: var(--radius-card);
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.18);
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    /* Mata el delay del doble-tap en táctil */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 50;
+  }
+
+  .cart-bar-count {
+    flex: 0 0 auto;
+    text-align: left;
+  }
+
+  .cart-bar-amount {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cart-bar-cta {
+    opacity: 0.85;
+    font-weight: 700;
+  }
+
+  /* ---------- Móvil: modal (oculto por defecto) ---------- */
+  /* En móvil se oculta con `transform: translateY(100%)` (fuera de pantalla),
+     no con `display: none`, para que la transición de slide-up funcione. */
+  .cart-modal {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cart-backdrop {
+    display: none;
+  }
+
+  .cart-close {
+    display: none; /* Solo visible en móvil */
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-left: auto;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .cart-close:hover {
+    background: var(--color-surface-soft);
+    color: var(--color-text);
   }
 
   /* ---------- Cabecera ---------- */
@@ -114,7 +221,6 @@
     transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
     flex-shrink: 0;
     align-self: flex-start;
-    /* Igual que los botones +/-: mata el delay del doble-tap en táctil */
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
@@ -137,7 +243,6 @@
     overflow-y: auto;
     flex: 1 1 auto;
     min-height: 0;
-    /* Scrollbar discreta */
     scrollbar-width: thin;
     scrollbar-color: var(--color-border) transparent;
   }
@@ -246,7 +351,37 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* ---------- Móvil: ocupa el ancho ---------- */
+  /* =================================================================
+     Desktop (≥ 641px): comportamiento original.
+     El panel flotante es el `.cart-modal`; la barra no se muestra.
+     ================================================================= */
+  @media (min-width: 641px) {
+    .cart {
+      width: min(320px, calc(100vw - 32px));
+      max-height: min(70vh, 480px);
+    }
+
+    .cart-modal {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-card);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.06);
+      transform-origin: bottom right;
+      max-height: min(70vh, 480px);
+      width: min(320px, calc(100vw - 32px));
+    }
+
+    .cart-bar {
+      display: none;
+    }
+  }
+
+  /* =================================================================
+     Móvil (≤ 640px): barra por defecto; modal a pantalla completa.
+     ================================================================= */
   @media (max-width: 640px) {
     .cart {
       right: 0;
@@ -254,15 +389,65 @@
       bottom: 0;
       width: 100%;
       max-width: 100%;
-      max-height: 60vh;
-      border-radius: var(--radius-card) var(--radius-card) 0 0;
-      border-bottom: none;
-      animation: cartInMobile 0.22s ease-out;
+      max-height: none;
     }
 
-    @keyframes cartInMobile {
-      from { opacity: 0; transform: translateY(100%); }
-      to { opacity: 1; transform: translateY(0); }
+    .cart-bar {
+      display: flex;
     }
+
+    /* El modal en móvil se controla con [data-cart-expanded] en el <aside> */
+    .cart-modal {
+      position: fixed;
+      inset: 0;
+      flex-direction: column;
+      background: var(--color-surface);
+      z-index: 60;
+      transform: translateY(100%);
+      transition: transform 0.22s ease-out;
+      padding-top: env(safe-area-inset-top, 0);
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    .cart[data-cart-expanded="true"] .cart-modal {
+      transform: translateY(0);
+    }
+
+    .cart[data-cart-expanded="true"] .cart-bar {
+      /* Mientras el modal está abierto, la barra queda detrás */
+      transform: translateY(100%);
+      transition: transform 0.22s ease-out;
+    }
+
+    .cart-close {
+      display: inline-flex;
+    }
+
+    /* Vaciar sigue siendo accesible, pero si se quiere también se puede
+       ocultar en móvil cuando el modal ya tiene su propio close. Aquí
+       lo dejamos visible para no romper el flujo existente. */
   }
 </style>
+
+<script>
+  // Toggle de la barra ↔ modal en móvil. En desktop la barra está oculta
+  // por CSS, así que el script no hace nada visible.
+  const cart = document.querySelector<HTMLElement>("[data-cart]");
+  const bar = document.querySelector<HTMLButtonElement>("[data-cart-bar]");
+  const close = document.querySelector<HTMLButtonElement>("[data-cart-close]");
+
+  if (cart && bar) {
+    bar.addEventListener("click", () => {
+      const isOpen = cart.getAttribute("data-cart-expanded") === "true";
+      cart.setAttribute("data-cart-expanded", String(!isOpen));
+      bar.setAttribute("aria-expanded", String(!isOpen));
+    });
+  }
+
+  if (cart && close) {
+    close.addEventListener("click", () => {
+      cart.setAttribute("data-cart-expanded", "false");
+      bar?.setAttribute("aria-expanded", "false");
+    });
+  }
+</script>

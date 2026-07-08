@@ -359,8 +359,11 @@ const websiteSchema = {
   // normal y validamos. Los handlers del cart chequean antes de usar.
   const cartEl = document.querySelector<HTMLElement>("[data-cart]");
   const cartListEl = document.querySelector<HTMLElement>("[data-cart-list]");
-  const cartCountEl = document.querySelector<HTMLElement>("[data-cart-count]");
-  const cartTotalAmountEl = document.querySelector<HTMLElement>("[data-cart-total-amount]");
+  // Hay dos `[data-cart-count]` y dos `[data-cart-total-amount]`: uno en la
+  // barra compacta (móvil) y otro en el modal/desktop. Hay que actualizar
+  // todos en cada cambio.
+  const cartCountEls = document.querySelectorAll<HTMLElement>("[data-cart-count]");
+  const cartTotalAmountEls = document.querySelectorAll<HTMLElement>("[data-cart-total-amount]");
   const cartClearBtn = document.querySelector<HTMLButtonElement>("[data-cart-clear]");
 
     // ---------- Estado ----------
@@ -521,14 +524,18 @@ const websiteSchema = {
 
     // ---------- Render del carrito ----------
     function renderCart(): void {
-      if (!cartEl || !cartListEl || !cartCountEl || !cartTotalAmountEl) return;
+      if (!cartEl || !cartListEl || !cartCountEls.length || !cartTotalAmountEls.length) return;
 
       // Si no hay items, ocultar el flotante.
       if (cart.length === 0) {
         cartEl.hidden = true;
         cartListEl.innerHTML = "";
-        cartCountEl.textContent = "0 productos";
-        cartTotalAmountEl.textContent = "0 cup";
+        cartCountEls.forEach((el) => {
+          el.textContent = "0 productos";
+        });
+        cartTotalAmountEls.forEach((el) => {
+          el.textContent = "0 cup";
+        });
         return;
       }
 
@@ -559,12 +566,17 @@ const websiteSchema = {
 
       // Cabecera: nº de productos (suma de cantidades, no de líneas distintas)
       const totalItems = cart.reduce((acc, it) => acc + it.quantity, 0);
-      cartCountEl.textContent =
-        totalItems === 1 ? "1 producto" : `${totalItems} productos`;
+      const countText = totalItems === 1 ? "1 producto" : `${totalItems} productos`;
+      cartCountEls.forEach((el) => {
+        el.textContent = countText;
+      });
 
       // Footer: coste total
       const totalCost = cart.reduce((acc, it) => acc + it.price * it.quantity, 0);
-      cartTotalAmountEl.textContent = `${totalCost} cup`;
+      const totalText = `${totalCost} cup`;
+      cartTotalAmountEls.forEach((el) => {
+        el.textContent = totalText;
+      });
     }
 
     // Vaciar pedido: limpia el carrito y resetea TODAS las qty visibles
