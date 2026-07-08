@@ -1,16 +1,17 @@
 ---
 // Navbar estilo pill flotante. En escritorio muestra logo + links (Inicio, Menú)
 // + botón de menú. En móvil solo logo + botón de menú; el botón abre un panel con los links.
+const base = import.meta.env.BASE_URL;
 const links = [
-  { href: "/", label: "Inicio" },
-  { href: "/#menu", label: "Menú" },
+  { href: base, label: "Inicio" },
+  { href: `${base}#menu`, label: "Menú" },
 ];
 ---
 
 <nav class="nav" aria-label="Principal">
   <div class="pill">
-    <a href="/" class="logo" aria-label="After Life inicio">
-      <img src="/logo.png" alt="After Life" />
+    <a href={import.meta.env.BASE_URL} class="logo" aria-label="After Life inicio">
+      <img src={`${import.meta.env.BASE_URL}logo.png`} alt="After Life" />
     </a>
 
     <ul class="links" role="list">
