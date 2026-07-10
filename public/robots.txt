@@ -1,5 +1,5 @@
 # robots.txt — After Life
-# https://afterlife.vercel.app
+# https://webyonel.github.io/afterlife
 
 User-agent: *
 # Permitimos todo el sitio público.
@@ -9,4 +9,4 @@ Allow: /
 Disallow: /admin
 
 # Indicamos la ubicación del sitemap para acelerar la indexación.
-Sitemap: https://afterlife.vercel.app/sitemap.xml
+Sitemap: https://webyonel.github.io/afterlife/sitemap.xml
