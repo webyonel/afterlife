@@ -32,7 +32,14 @@ const {
 } = Astro.props;
 
 const canonicalUrl = canonical ?? new URL(Astro.url.pathname, SITE_URL).toString();
-const ogImageUrl = new URL(ogImage, SITE_URL).toString();
+// IMPORTANTE: `new URL("/og-image.png", SITE_URL)` devolvería una URL absoluta
+// del host (sin el base path "/afterlife/"), porque la barra inicial se
+// interpreta como raíz del dominio. Para mantener el base path, concatenamos
+// manualmente y soportamos tanto paths relativos al sitio como URLs absolutas
+// pasadas por prop.
+const ogImageUrl = ogImage.startsWith("http")
+  ? ogImage
+  : `${SITE_URL.replace(/\/$/, "")}${ogImage.startsWith("/") ? ogImage : "/" + ogImage}`;
 ---
 
 <!doctype html>
